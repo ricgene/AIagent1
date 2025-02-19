@@ -19,7 +19,7 @@ export async function matchBusinessesToQuery(
         {
           role: "system",
           content:
-            "You are a business matching expert. Given a user query and list of businesses, rank the businesses by relevance and return their IDs in order. Respond with JSON in this format: { 'matches': number[] }",
+            "You are an expert business matcher. Given a user's need and business profiles, analyze the semantic relationship between what the user needs and what businesses can provide. Consider capabilities, context, and potential solutions even if the exact terms don't match. For example, if a user needs 'home cooling solution', match with businesses offering 'AC installation' or 'HVAC services'. Return business IDs ranked by relevance in JSON format: { 'matches': number[], 'reasoning': string }",
         },
         {
           role: "user",
@@ -40,7 +40,10 @@ export async function matchBusinessesToQuery(
 
     const result = JSON.parse(response.choices[0].message.content);
     const matchedIds = new Set(result.matches);
-    
+
+    // Log the AI reasoning for debugging
+    console.log("AI Matching Reasoning:", result.reasoning);
+
     return businesses
       .filter((b) => matchedIds.has(b.id))
       .sort((a, b) => {
