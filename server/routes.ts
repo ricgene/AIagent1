@@ -14,44 +14,54 @@ export async function registerRoutes(app: Express) {
     {
       username: "techhub",
       password: "password123",
-      type: "business",
+      type: "business" as const,
       name: "TechHub Solutions",
     },
     {
       username: "homefix",
       password: "password123",
-      type: "business",
+      type: "business" as const,
       name: "HomeFix Pro",
     },
     {
       username: "healthplus",
       password: "password123",
-      type: "business",
+      type: "business" as const,
       name: "HealthPlus Services",
     },
   ];
 
   // Create sample users and their business profiles
+  console.log("Creating sample businesses...");
   for (const business of sampleBusinesses) {
-    const user = await storage.createUser(business);
-    await storage.createBusiness(user.id, {
-      description: business.name === "TechHub Solutions"
-        ? "Expert IT consulting and software development services. Specializing in web applications, mobile apps, and cloud solutions."
-        : business.name === "HomeFix Pro"
-        ? "Professional home repair and maintenance services. From basic repairs to major renovations, we do it all."
-        : "Comprehensive healthcare services including preventive care, wellness programs, and specialized treatments.",
-      category: business.name === "TechHub Solutions"
-        ? "Technology"
-        : business.name === "HomeFix Pro"
-        ? "Home Services"
-        : "Healthcare",
-      location: "New York, NY",
-      services: business.name === "TechHub Solutions"
-        ? ["Web Development", "Mobile Apps", "Cloud Computing", "IT Consulting"]
-        : business.name === "HomeFix Pro"
-        ? ["Home Repairs", "Renovation", "Plumbing", "Electrical", "HVAC"]
-        : ["Primary Care", "Wellness Programs", "Specialized Care", "Telemedicine"],
-    });
+    try {
+      console.log(`Creating user for ${business.name}...`);
+      const user = await storage.createUser(business);
+      console.log(`Created user:`, user);
+
+      console.log(`Creating business profile for ${business.name}...`);
+      await storage.createBusiness(user.id, {
+        description: business.name === "TechHub Solutions"
+          ? "Expert IT consulting and software development services. Specializing in web applications, mobile apps, and cloud solutions."
+          : business.name === "HomeFix Pro"
+          ? "Professional home repair and maintenance services. From basic repairs to major renovations, we do it all."
+          : "Comprehensive healthcare services including preventive care, wellness programs, and specialized treatments.",
+        category: business.name === "TechHub Solutions"
+          ? "Technology"
+          : business.name === "HomeFix Pro"
+          ? "Home Services"
+          : "Healthcare",
+        location: "New York, NY",
+        services: business.name === "TechHub Solutions"
+          ? ["Web Development", "Mobile Apps", "Cloud Computing", "IT Consulting"]
+          : business.name === "HomeFix Pro"
+          ? ["Home Repairs", "Renovation", "Plumbing", "Electrical", "HVAC"]
+          : ["Primary Care", "Wellness Programs", "Specialized Care", "Telemedicine"],
+      });
+      console.log(`Created business profile for ${business.name}`);
+    } catch (error) {
+      console.error(`Error creating sample business ${business.name}:`, error);
+    }
   }
 
   // WebSocket setup for real-time messaging

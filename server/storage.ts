@@ -72,6 +72,9 @@ export class MemStorage implements IStorage {
   async searchBusinesses(query: string): Promise<Business[]> {
     const lowercaseQuery = query.toLowerCase();
     return Array.from(this.businesses.values()).filter((business) => {
+      // Log the business being checked for debugging
+      console.log("Checking business:", business);
+
       return (
         business.description.toLowerCase().includes(lowercaseQuery) ||
         business.category.toLowerCase().includes(lowercaseQuery) ||
