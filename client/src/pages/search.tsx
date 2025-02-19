@@ -27,6 +27,12 @@ export default function Search() {
     enabled: query.length > 0,
   });
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Force a refetch when the form is submitted
+    window.location.href = `/search?q=${encodeURIComponent(query)}`;
+  };
+
   return (
     <div className="container max-w-4xl mx-auto px-4">
       <Card className="mt-8">
@@ -37,13 +43,15 @@ export default function Search() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex gap-2">
+          <form onSubmit={handleSearch} className="flex gap-2">
             <Input
-              placeholder="Describe what you need..."
+              placeholder="Describe what you need... (e.g., 'need AC repair')"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              className="flex-1"
             />
-          </div>
+            <Button type="submit">Search</Button>
+          </form>
 
           <div className="mt-8 space-y-4">
             {isLoading ? (
