@@ -8,7 +8,6 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  CardFooter,
 } from "@/components/ui/card";
 import {
   Alert,
@@ -23,7 +22,7 @@ export default function Search() {
   const [, setLocation] = useLocation();
 
   const { data: businesses = [], isLoading } = useQuery<Business[]>({
-    queryKey: ["/api/businesses/search", { q: query }],
+    queryKey: [`/api/businesses/search?q=${encodeURIComponent(query)}`],
     enabled: query.length > 0,
   });
 
