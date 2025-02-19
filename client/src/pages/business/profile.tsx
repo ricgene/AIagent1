@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertBusinessSchema } from "@shared/schema";
-import { z } from "zod"; // Added missing import
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -25,15 +25,17 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 
+const formSchema = insertBusinessSchema.extend({
+  services: z.string().transform((val) => val.split(",").map((s) => s.trim()).filter(Boolean)),
+});
+
+type FormValues = z.infer<typeof formSchema>;
+
 export default function BusinessProfile() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
-  const form = useForm({
-    resolver: zodResolver(
-      insertBusinessSchema.extend({
-        services: z.string().transform((val: string) => val.split(",").map((s: string) => s.trim())),
-      })
-    ),
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       description: "",
       category: "",
@@ -43,7 +45,7 @@ export default function BusinessProfile() {
   });
 
   const createProfile = useMutation({
-    mutationFn: async (data: ReturnType<typeof form.getValues>) => {
+    mutationFn: async (data: FormValues) => {
       return apiRequest("POST", "/api/businesses", {
         ...data,
         userId: 1, // In a real app, this would come from auth context
