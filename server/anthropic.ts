@@ -13,6 +13,9 @@ export async function matchBusinessesToQuery(
   businesses: Business[]
 ): Promise<Business[]> {
   try {
+    console.log("Calling Anthropic API with query:", query);
+    console.log("Number of businesses to match:", businesses.length);
+
     const response = await anthropic.messages.create({
       model: "claude-3-5-sonnet-20241022",
       max_tokens: 1024,
@@ -30,6 +33,8 @@ export async function matchBusinessesToQuery(
       ],
     });
 
+    console.log("Received response from Anthropic:", response.content);
+
     if (!response.content[0] || typeof response.content[0] !== 'object') {
       throw new Error("Invalid response format");
     }
@@ -39,10 +44,13 @@ export async function matchBusinessesToQuery(
       throw new Error("No text content in response");
     }
 
-    console.log("AI Response:", content); // Add logging
+    console.log("Parsed content from response:", content);
 
     const result = JSON.parse(content);
+    console.log("Parsed JSON result:", result);
+
     const matchedIds = new Set(result.matches);
+    console.log("Matched business IDs:", Array.from(matchedIds));
 
     // Log the AI reasoning for debugging
     console.log("AI Matching Reasoning:", result.reasoning);

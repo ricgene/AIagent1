@@ -110,14 +110,22 @@ export async function registerRoutes(app: Express) {
   app.get("/api/businesses/search", async (req, res) => {
     try {
       const query = req.query.q as string;
+      console.log("Search query received:", query); // Add logging
+
       if (!query) {
+        console.log("No query provided, returning empty array");
         return res.json([]);
       }
 
       const businesses = await storage.searchBusinesses(query);
+      console.log("Found businesses before AI matching:", businesses.length); // Add logging
+
       const matches = await matchBusinessesToQuery(query, businesses);
+      console.log("AI matched businesses:", matches.length); // Add logging
+
       res.json(matches);
     } catch (error) {
+      console.error("Search error:", error); // Detailed error logging
       if (error instanceof Error) {
         res.status(500).json({ error: error.message });
       } else {
