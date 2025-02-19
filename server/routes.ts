@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import { createServer } from "http";
-import { WebSocketServer, WebSocket } from "ws"; // Changed import
+import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
 import { insertUserSchema, insertBusinessSchema, insertMessageSchema } from "@shared/schema";
 import { matchBusinessesToQuery } from "./openai";
@@ -8,6 +8,51 @@ import { ZodError } from "zod";
 
 export async function registerRoutes(app: Express) {
   const httpServer = createServer(app);
+
+  // Add some sample business data
+  const sampleBusinesses = [
+    {
+      username: "techhub",
+      password: "password123",
+      type: "business",
+      name: "TechHub Solutions",
+    },
+    {
+      username: "homefix",
+      password: "password123",
+      type: "business",
+      name: "HomeFix Pro",
+    },
+    {
+      username: "healthplus",
+      password: "password123",
+      type: "business",
+      name: "HealthPlus Services",
+    },
+  ];
+
+  // Create sample users and their business profiles
+  for (const business of sampleBusinesses) {
+    const user = await storage.createUser(business);
+    await storage.createBusiness(user.id, {
+      description: business.name === "TechHub Solutions"
+        ? "Expert IT consulting and software development services. Specializing in web applications, mobile apps, and cloud solutions."
+        : business.name === "HomeFix Pro"
+        ? "Professional home repair and maintenance services. From basic repairs to major renovations, we do it all."
+        : "Comprehensive healthcare services including preventive care, wellness programs, and specialized treatments.",
+      category: business.name === "TechHub Solutions"
+        ? "Technology"
+        : business.name === "HomeFix Pro"
+        ? "Home Services"
+        : "Healthcare",
+      location: "New York, NY",
+      services: business.name === "TechHub Solutions"
+        ? ["Web Development", "Mobile Apps", "Cloud Computing", "IT Consulting"]
+        : business.name === "HomeFix Pro"
+        ? ["Home Repairs", "Renovation", "Plumbing", "Electrical", "HVAC"]
+        : ["Primary Care", "Wellness Programs", "Specialized Care", "Telemedicine"],
+    });
+  }
 
   // WebSocket setup for real-time messaging
   const wss = new WebSocketServer({ server: httpServer, path: "/ws" });
