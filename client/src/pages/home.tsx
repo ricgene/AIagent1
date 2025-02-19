@@ -1,6 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertUserSchema } from "@shared/schema";
+import type { User } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -44,15 +45,17 @@ export default function Home() {
   });
 
   const register = useMutation({
-    mutationFn: async (data: typeof form.getValues) => {
-      return apiRequest("POST", "/api/users", data);
+    mutationFn: async (data: Parameters<typeof form.handleSubmit>[0]) => {
+      const response = await apiRequest("POST", "/api/users", data);
+      const user: User = await response.json();
+      return user;
     },
-    onSuccess: (response) => {
+    onSuccess: (user) => {
       toast({
         title: "Registration successful",
         description: "Welcome to AIConnect!",
       });
-      setLocation(response.type === "business" ? "/business/profile" : "/search");
+      setLocation(user.type === "business" ? "/business/profile" : "/search");
     },
   });
 
