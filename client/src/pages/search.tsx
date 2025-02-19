@@ -8,6 +8,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from "@/components/ui/card";
 import {
   Alert,
@@ -18,20 +19,18 @@ import { MessageSquare, Sparkles } from "lucide-react";
 import type { Business } from "@shared/schema";
 
 export default function Search() {
-  const [query, setQuery] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const [activeQuery, setActiveQuery] = useState("");
   const [, setLocation] = useLocation();
 
   const { data: businesses = [], isLoading } = useQuery<Business[]>({
-    queryKey: [`/api/businesses/search?q=${encodeURIComponent(query)}`],
-    enabled: query.length > 0,
+    queryKey: [`/api/businesses/search?q=${encodeURIComponent(activeQuery)}`],
+    enabled: activeQuery.length > 0,
   });
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const searchInput = (e.target as HTMLFormElement).querySelector('input')?.value;
-    if (searchInput) {
-      setQuery(searchInput);
-    }
+    setActiveQuery(searchInput);
   };
 
   return (
@@ -44,11 +43,11 @@ export default function Search() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSearch} className="flex gap-2">
+          <form onSubmit={handleSubmit} className="flex gap-2">
             <Input
               placeholder="Describe what you need... (e.g., 'need AC repair')"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
               className="flex-1"
             />
             <Button type="submit">Search</Button>
@@ -71,8 +70,11 @@ export default function Search() {
                   <Card key={business.id}>
                     <CardContent className="pt-6">
                       <h3 className="text-lg font-semibold mb-2">
-                        {business.category}
+                        {business.name}
                       </h3>
+                      <p className="text-sm text-muted-foreground mb-1">
+                        {business.category}
+                      </p>
                       <p className="text-muted-foreground mb-4">
                         {business.description}
                       </p>
@@ -82,10 +84,9 @@ export default function Search() {
                         <span>{business.services.join(", ")}</span>
                       </div>
                     </CardContent>
-                    <CardFooter>
+                    <CardFooter className="flex justify-end">
                       <Button
                         variant="secondary"
-                        className="ml-auto"
                         onClick={() => setLocation(`/messages/${business.userId}`)}
                       >
                         <MessageSquare className="w-4 h-4 mr-2" />
@@ -95,7 +96,7 @@ export default function Search() {
                   </Card>
                 ))}
               </>
-            ) : query.length > 0 ? (
+            ) : activeQuery.length > 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 No businesses found matching your needs
               </div>
