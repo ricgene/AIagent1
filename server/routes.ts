@@ -121,20 +121,19 @@ export async function registerRoutes(app: Express) {
     try {
       const query = req.query.q as string;
       console.log("Search query received:", query);
-      console.log("Raw query parameters:", req.query);
 
       if (!query) {
         console.log("No query provided, returning empty array");
         return res.json([]);
       }
 
+      // Get all businesses first
       const businesses = await storage.searchBusinesses(query);
       console.log("Found businesses before AI matching:", businesses.length);
-      console.log("Business data:", businesses);
 
+      // Use Anthropic to perform semantic matching
       const matches = await matchBusinessesToQuery(query, businesses);
       console.log("AI matched businesses:", matches.length);
-      console.log("Matched businesses:", matches);
 
       res.json(matches);
     } catch (error) {
