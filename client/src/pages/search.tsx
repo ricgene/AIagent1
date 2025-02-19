@@ -23,13 +23,12 @@ export default function Search() {
   const [, setLocation] = useLocation();
 
   const { data: businesses = [], isLoading } = useQuery<Business[]>({
-    queryKey: ["/api/businesses/search", query],
+    queryKey: ["/api/businesses/search", { q: query }],
     enabled: query.length > 0,
   });
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    // Update the query to trigger a new search
     const searchInput = (e.target as HTMLFormElement).querySelector('input')?.value;
     if (searchInput) {
       setQuery(searchInput);

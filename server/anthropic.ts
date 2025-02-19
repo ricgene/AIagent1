@@ -30,11 +30,16 @@ export async function matchBusinessesToQuery(
       ],
     });
 
-    // Parse the text content from the first message
-    const content = response.content[0].text;
-    if (!content) {
-      throw new Error("No content in response");
+    if (!response.content[0] || typeof response.content[0] !== 'object') {
+      throw new Error("Invalid response format");
     }
+
+    const content = response.content[0].type === 'text' ? response.content[0].text : null;
+    if (!content) {
+      throw new Error("No text content in response");
+    }
+
+    console.log("AI Response:", content); // Add logging
 
     const result = JSON.parse(content);
     const matchedIds = new Set(result.matches);
