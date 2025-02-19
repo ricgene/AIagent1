@@ -29,8 +29,11 @@ export default function Search() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    // Force a refetch when the form is submitted
-    window.location.href = `/search?q=${encodeURIComponent(query)}`;
+    // Update the query to trigger a new search
+    const searchInput = (e.target as HTMLFormElement).querySelector('input')?.value;
+    if (searchInput) {
+      setQuery(searchInput);
+    }
   };
 
   return (

@@ -3,7 +3,7 @@ import { createServer } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
 import { insertUserSchema, insertBusinessSchema, insertMessageSchema } from "@shared/schema";
-import { matchBusinessesToQuery } from "./openai";
+import { matchBusinessesToQuery } from "./anthropic";
 import { ZodError } from "zod";
 
 export async function registerRoutes(app: Express) {
