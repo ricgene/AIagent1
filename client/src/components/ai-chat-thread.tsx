@@ -1,9 +1,9 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Send } from "lucide-react";
+import { Send, Mic, MicOff } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { apiRequest } from "@/lib/queryClient";
 import type { Message } from "@shared/schema";
@@ -14,13 +14,52 @@ interface AIChatThreadProps {
 
 export function AIChatThread({ userId }: AIChatThreadProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { register, handleSubmit, reset } = useForm<{ content: string }>();
+  const { register, handleSubmit, reset, setValue } = useForm<{ content: string }>();
   const queryClient = useQueryClient();
+  const [isListening, setIsListening] = useState(false);
+  const [speechSupported] = useState('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
+  const recognitionRef = useRef<any>(null);
   const queryKey = [`/api/messages/ai/${userId}`];
 
-  const { data: messages = [], refetch } = useQuery<Message[]>({
+  const { data: messages = [] } = useQuery<Message[]>({
     queryKey,
   });
+
+  // Initialize speech recognition
+  useEffect(() => {
+    if (speechSupported) {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = false;
+
+      recognitionRef.current.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        setValue("content", transcript);
+        handleSubmit((data) => sendMessage.mutate(data.content))();
+      };
+
+      recognitionRef.current.onend = () => {
+        setIsListening(false);
+      };
+    }
+  }, [speechSupported, setValue, handleSubmit]);
+
+  // Speech synthesis for AI responses
+  const speakResponse = (text: string) => {
+    const utterance = new SpeechSynthesisUtterance(text);
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const toggleListening = () => {
+    if (!isListening) {
+      recognitionRef.current?.start();
+      setIsListening(true);
+    } else {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+    }
+  };
 
   const sendMessage = useMutation({
     mutationFn: async (content: string) => {
@@ -39,6 +78,11 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
         console.log("Old messages:", old);
         const updatedMessages = [...old, ...newMessages];
         console.log("Updated messages:", updatedMessages);
+        // Speak the AI's response
+        const aiResponse = newMessages.find(m => m.isAiAssistant);
+        if (aiResponse) {
+          speakResponse(aiResponse.content);
+        }
         return updatedMessages;
       });
       reset();
@@ -88,12 +132,27 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
           {...register("content", { required: true })}
           placeholder="Ask about home improvement..."
           className="flex-1"
-          disabled={sendMessage.isPending}
+          disabled={sendMessage.isPending || isListening}
         />
+        {speechSupported && (
+          <Button
+            type="button"
+            size="icon"
+            variant={isListening ? "destructive" : "secondary"}
+            onClick={toggleListening}
+            disabled={sendMessage.isPending}
+          >
+            {isListening ? (
+              <MicOff className="h-4 w-4" />
+            ) : (
+              <Mic className="h-4 w-4" />
+            )}
+          </Button>
+        )}
         <Button
           type="submit"
           size="icon"
-          disabled={sendMessage.isPending}
+          disabled={sendMessage.isPending || isListening}
         >
           <Send className="h-4 w-4" />
         </Button>
