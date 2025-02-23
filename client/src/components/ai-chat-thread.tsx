@@ -73,18 +73,26 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
 
       const utterance = new SpeechSynthesisUtterance(text);
 
-      // Select a more natural-sounding voice
+      // Select a US English female voice
       const preferredVoice = voices.find(voice =>
-        voice.name.includes('Google') || // Prefer Google voices if available
-        voice.name.includes('Natural') ||
-        voice.name.includes('Premium')
+        voice.lang === 'en-US' && 
+        voice.name.toLowerCase().includes('female') &&
+        !voice.name.toLowerCase().includes('german') && 
+        (voice.name.includes('Google') || voice.name.includes('Natural'))
+      ) || voices.find(voice => 
+        voice.lang === 'en-US' && 
+        !voice.name.toLowerCase().includes('male') &&
+        !voice.name.toLowerCase().includes('german')
       ) || voices[0];
+
+      console.log('Selected voice:', preferredVoice?.name);
 
       // Customize voice settings
       utterance.voice = preferredVoice;
-      utterance.pitch = 1.0;  // Natural pitch
-      utterance.rate = 0.9;   // Slightly slower rate for clarity
-      utterance.volume = 1.0; // Full volume
+      utterance.lang = 'en-US';  // Force US English
+      utterance.pitch = 1.0;     // Natural pitch
+      utterance.rate = 0.9;      // Slightly slower rate for clarity
+      utterance.volume = 1.0;    // Full volume
 
       // Add event handlers to track speech status
       utterance.onstart = () => console.log('Started speaking');
