@@ -107,23 +107,25 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
       recognitionRef.current.maxAlternatives = 1;
 
       recognitionRef.current.onresult = (event: any) => {
+        console.log("Speech recognition result event:", event);
         let interimTranscript = '';
-        let finalTranscript = transcriptText;  // Start with existing transcript
+        let finalTranscript = '';
 
         for (let i = event.resultIndex; i < event.results.length; ++i) {
           const transcript = event.results[i][0].transcript;
           if (event.results[i].isFinal) {
             finalTranscript += transcript + ' ';
-            setTranscriptText(finalTranscript);
           } else {
             interimTranscript += transcript;
           }
         }
 
-        // Update the input field with current transcription
         const displayText = (finalTranscript + interimTranscript).trim();
-        console.log('Setting input value to:', displayText);
-        setValue("content", displayText);
+        console.log('Current transcript:', displayText);
+
+        // Update both the state and the form input
+        setTranscriptText(displayText);
+        setValue("content", displayText, { shouldValidate: true });
 
         // Scroll the input to show the latest text
         if (inputRef.current) {
@@ -131,7 +133,13 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
         }
       };
 
+      recognitionRef.current.onstart = () => {
+        console.log("Speech recognition started");
+        setIsListening(true);
+      };
+
       recognitionRef.current.onend = () => {
+        console.log("Speech recognition ended");
         setIsListening(false);
       };
 
@@ -140,7 +148,7 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
         setIsListening(false);
       };
     }
-  }, [speechSupported, setValue, transcriptText]);
+  }, [speechSupported, setValue]);
 
   // Speech synthesis for AI responses
   const speakResponse = (text: string) => {
