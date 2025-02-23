@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -15,22 +15,32 @@ interface AIChatThreadProps {
 export function AIChatThread({ userId }: AIChatThreadProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { register, handleSubmit, reset } = useForm<{ content: string }>();
+  const queryClient = useQueryClient();
+  const queryKey = [`/api/messages/ai/${userId}`];
 
   const { data: messages = [], refetch } = useQuery<Message[]>({
-    queryKey: [`/api/messages/ai/${userId}`],
+    queryKey,
   });
 
   const sendMessage = useMutation({
     mutationFn: async (content: string) => {
+      console.log("Sending message:", content);
       const response = await apiRequest("POST", "/api/messages/ai", {
         fromId: userId,
         content,
       });
       const newMessages: Message[] = await response.json();
+      console.log("Received new messages:", newMessages);
       return newMessages;
     },
-    onSuccess: () => {
-      refetch();
+    onSuccess: (newMessages) => {
+      console.log("Mutation succeeded, updating messages:", newMessages);
+      queryClient.setQueryData(queryKey, (old: Message[] = []) => {
+        console.log("Old messages:", old);
+        const updatedMessages = [...old, ...newMessages];
+        console.log("Updated messages:", updatedMessages);
+        return updatedMessages;
+      });
       reset();
     },
   });
