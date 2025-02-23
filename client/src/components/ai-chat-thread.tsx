@@ -22,7 +22,8 @@ interface AIChatThreadProps {
 export function AIChatThread({ userId }: AIChatThreadProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const { register, handleSubmit, reset, setValue } = useForm<{ content: string }>();
+  const [transcriptText, setTranscriptText] = useState('');
+  const { register, handleSubmit, reset, setValue, watch } = useForm<{ content: string }>();
   const queryClient = useQueryClient();
   const [isListening, setIsListening] = useState(false);
   const [speechSupported] = useState('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
@@ -58,6 +59,7 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
         return updatedMessages;
       });
       reset();
+      setTranscriptText('');
     },
   });
 
@@ -104,23 +106,24 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
       recognitionRef.current.interimResults = true;  // Get interim results
       recognitionRef.current.maxAlternatives = 1;
 
-      let finalTranscript = '';
-
       recognitionRef.current.onresult = (event: any) => {
         let interimTranscript = '';
+        let finalTranscript = transcriptText;  // Start with existing transcript
 
         for (let i = event.resultIndex; i < event.results.length; ++i) {
           const transcript = event.results[i][0].transcript;
           if (event.results[i].isFinal) {
             finalTranscript += transcript + ' ';
+            setTranscriptText(finalTranscript);
           } else {
             interimTranscript += transcript;
           }
         }
 
         // Update the input field with current transcription
-        const content = finalTranscript.trim() + ' ' + interimTranscript;
-        setValue("content", content);
+        const displayText = (finalTranscript + interimTranscript).trim();
+        console.log('Setting input value to:', displayText);
+        setValue("content", displayText);
 
         // Scroll the input to show the latest text
         if (inputRef.current) {
@@ -137,7 +140,7 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
         setIsListening(false);
       };
     }
-  }, [speechSupported, setValue]);
+  }, [speechSupported, setValue, transcriptText]);
 
   // Speech synthesis for AI responses
   const speakResponse = (text: string) => {
