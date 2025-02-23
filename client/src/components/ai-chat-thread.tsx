@@ -17,7 +17,7 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
   const { register, handleSubmit, reset } = useForm<{ content: string }>();
 
   const { data: messages = [], refetch } = useQuery<Message[]>({
-    queryKey: ["/api/messages/ai", userId],
+    queryKey: [`/api/messages/ai/${userId}`],
   });
 
   const sendMessage = useMutation({
