@@ -5,6 +5,13 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Send, Mic, MicOff } from "lucide-react";
 import { useForm } from "react-hook-form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { apiRequest } from "@/lib/queryClient";
 import type { Message } from "@shared/schema";
 
@@ -20,6 +27,7 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
   const [speechSupported] = useState('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
   const recognitionRef = useRef<any>(null);
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [selectedVoice, setSelectedVoice] = useState<string | null>(null);
   const queryKey = [`/api/messages/ai/${userId}`];
 
   // Query for messages
@@ -27,17 +35,29 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
     queryKey,
   });
 
-  // Load available voices
+  // Load available voices and select default
   useEffect(() => {
     const loadVoices = () => {
       const availableVoices = window.speechSynthesis.getVoices();
+      console.log("Available voices:", availableVoices.map(v => `${v.name} (${v.lang})`));
+
       if (availableVoices.length > 0) {
         setVoices(availableVoices);
+
+        // Find a suitable default voice (female US English)
+        const defaultVoice = availableVoices.find(voice => 
+          voice.lang === 'en-US' && 
+          voice.name.toLowerCase().includes('female') &&
+          !voice.name.toLowerCase().includes('german')
+        )?.name || availableVoices[0].name;
+
+        console.log("Selected default voice:", defaultVoice);
+        setSelectedVoice(defaultVoice);
       }
     };
 
     loadVoices(); // Try loading immediately
-    window.speechSynthesis.onvoiceschanged = loadVoices; // Load when voices become available
+    window.speechSynthesis.onvoiceschanged = loadVoices;
 
     return () => {
       window.speechSynthesis.onvoiceschanged = null;
@@ -73,33 +93,26 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
 
       const utterance = new SpeechSynthesisUtterance(text);
 
-      // Select a US English female voice
-      const preferredVoice = voices.find(voice =>
-        voice.lang === 'en-US' && 
-        voice.name.toLowerCase().includes('female') &&
-        !voice.name.toLowerCase().includes('german') && 
-        (voice.name.includes('Google') || voice.name.includes('Natural'))
-      ) || voices.find(voice => 
-        voice.lang === 'en-US' && 
-        !voice.name.toLowerCase().includes('male') &&
-        !voice.name.toLowerCase().includes('german')
-      ) || voices[0];
+      // Use the selected voice
+      const voice = voices.find(v => v.name === selectedVoice);
+      console.log('Using voice:', voice?.name);
 
-      console.log('Selected voice:', preferredVoice?.name);
+      if (voice) {
+        utterance.voice = voice;
+        utterance.lang = 'en-US';  // Force US English
+        utterance.pitch = 1.1;     // Slightly higher pitch for more natural female voice
+        utterance.rate = 1.0;      // Normal speaking rate
+        utterance.volume = 0.9;    // Slightly reduced volume to sound more natural
 
-      // Customize voice settings
-      utterance.voice = preferredVoice;
-      utterance.lang = 'en-US';  // Force US English
-      utterance.pitch = 1.1;     // Slightly higher pitch for more natural female voice
-      utterance.rate = 1.0;      // Normal speaking rate
-      utterance.volume = 0.9;    // Slightly reduced volume to sound more natural
+        // Add event handlers to track speech status
+        utterance.onstart = () => console.log('Started speaking');
+        utterance.onend = () => console.log('Finished speaking');
+        utterance.onerror = (e) => console.error('Speech error:', e);
 
-      // Add event handlers to track speech status
-      utterance.onstart = () => console.log('Started speaking');
-      utterance.onend = () => console.log('Finished speaking');
-      utterance.onerror = (e) => console.error('Speech error:', e);
-
-      window.speechSynthesis.speak(utterance);
+        window.speechSynthesis.speak(utterance);
+      } else {
+        console.error('Selected voice not found:', selectedVoice);
+      }
     } catch (error) {
       console.error('Error in speech synthesis:', error);
     }
@@ -148,8 +161,31 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Filter for just US English voices
+  const usEnglishVoices = voices.filter(voice => voice.lang === 'en-US');
+
   return (
     <div className="flex flex-col h-[600px]">
+      <div className="border-b p-4">
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-medium">Assistant Voice:</label>
+          <Select
+            value={selectedVoice || undefined}
+            onValueChange={setSelectedVoice}
+          >
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Select a voice" />
+            </SelectTrigger>
+            <SelectContent>
+              {usEnglishVoices.map((voice) => (
+                <SelectItem key={voice.name} value={voice.name}>
+                  {voice.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 ? (
           <div className="flex justify-start">
