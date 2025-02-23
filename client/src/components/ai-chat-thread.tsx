@@ -90,9 +90,9 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
       // Customize voice settings
       utterance.voice = preferredVoice;
       utterance.lang = 'en-US';  // Force US English
-      utterance.pitch = 1.0;     // Natural pitch
-      utterance.rate = 0.9;      // Slightly slower rate for clarity
-      utterance.volume = 1.0;    // Full volume
+      utterance.pitch = 1.1;     // Slightly higher pitch for more natural female voice
+      utterance.rate = 1.0;      // Normal speaking rate
+      utterance.volume = 0.9;    // Slightly reduced volume to sound more natural
 
       // Add event handlers to track speech status
       utterance.onstart = () => console.log('Started speaking');
