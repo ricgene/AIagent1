@@ -22,10 +22,12 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
 
   const sendMessage = useMutation({
     mutationFn: async (content: string) => {
-      return apiRequest("POST", "/api/messages/ai", {
+      const response = await apiRequest("POST", "/api/messages/ai", {
         fromId: userId,
         content,
       });
+      const newMessages: Message[] = await response.json();
+      return newMessages;
     },
     onSuccess: () => {
       refetch();
@@ -76,6 +78,7 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
           {...register("content", { required: true })}
           placeholder="Ask about home improvement..."
           className="flex-1"
+          disabled={sendMessage.isPending}
         />
         <Button
           type="submit"
