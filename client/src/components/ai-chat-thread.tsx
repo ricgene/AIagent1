@@ -104,8 +104,6 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
       recognitionRef.current.maxAlternatives = 1;
 
       let finalTranscript = '';
-      let lastWordTime = Date.now();
-      const PAUSE_THRESHOLD = 1500; // 1.5 seconds of silence before stopping
 
       recognitionRef.current.onresult = (event: any) => {
         let interimTranscript = '';
@@ -114,7 +112,6 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
           const transcript = event.results[i][0].transcript;
           if (event.results[i].isFinal) {
             finalTranscript += transcript + ' ';
-            lastWordTime = Date.now();
           } else {
             interimTranscript += transcript;
           }
@@ -122,29 +119,10 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
 
         // Update the input field with current transcription
         setValue("content", finalTranscript.trim() + ' ' + interimTranscript);
-
-        // If we have a significant pause after speaking, submit
-        if (finalTranscript && Date.now() - lastWordTime > PAUSE_THRESHOLD) {
-          handleSubmit((data) => {
-            if (data.content.trim()) {
-              sendMessage.mutate(data.content.trim());
-            }
-          })();
-          finalTranscript = '';
-        }
       };
 
       recognitionRef.current.onend = () => {
         setIsListening(false);
-        // If we were still listening and have content, submit it
-        const currentContent = finalTranscript.trim();
-        if (currentContent) {
-          handleSubmit((data) => {
-            if (data.content.trim()) {
-              sendMessage.mutate(data.content.trim());
-            }
-          })();
-        }
       };
 
       recognitionRef.current.onerror = (event: any) => {
@@ -152,7 +130,7 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
         setIsListening(false);
       };
     }
-  }, [speechSupported, setValue, handleSubmit]);
+  }, [speechSupported, setValue]);
 
   // Speech synthesis for AI responses
   const speakResponse = (text: string) => {
