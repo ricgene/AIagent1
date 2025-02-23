@@ -259,8 +259,8 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
         className="border-t p-4 flex gap-2"
       >
         <Input
-          {...register("content", { required: true })}
-          ref={inputRef}
+          value={watch("content") || transcriptText}
+          onChange={(e) => setValue("content", e.target.value)}
           placeholder="Ask about home improvement..."
           className="flex-1 overflow-x-auto whitespace-nowrap"
           disabled={sendMessage.isPending}
