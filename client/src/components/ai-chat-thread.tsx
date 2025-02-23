@@ -22,6 +22,11 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const queryKey = [`/api/messages/ai/${userId}`];
 
+  // Query for messages
+  const { data: messages = [] } = useQuery<Message[]>({
+    queryKey,
+  });
+
   // Load available voices
   useEffect(() => {
     const loadVoices = () => {
