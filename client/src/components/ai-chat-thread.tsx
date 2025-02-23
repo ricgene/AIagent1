@@ -45,8 +45,8 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
         setVoices(availableVoices);
 
         // Find a suitable default voice (female US English)
-        const defaultVoice = availableVoices.find(voice => 
-          voice.lang === 'en-US' && 
+        const defaultVoice = availableVoices.find(voice =>
+          voice.lang === 'en-US' &&
           voice.name.toLowerCase().includes('female') &&
           !voice.name.toLowerCase().includes('german')
         )?.name || availableVoices[0].name;
@@ -69,20 +69,60 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
     if (speechSupported) {
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       recognitionRef.current = new SpeechRecognition();
-      recognitionRef.current.continuous = false;
-      recognitionRef.current.interimResults = false;
+      recognitionRef.current.continuous = true;  // Allow continuous recognition
+      recognitionRef.current.interimResults = true;  // Get interim results
+      recognitionRef.current.maxAlternatives = 1;
+
+      let finalTranscript = '';
+      let lastWordTime = Date.now();
+      const PAUSE_THRESHOLD = 1500; // 1.5 seconds of silence before stopping
 
       recognitionRef.current.onresult = (event: any) => {
-        const transcript = event.results[0][0].transcript;
-        setValue("content", transcript);
-        handleSubmit((data) => sendMessage.mutate(data.content))();
+        let interimTranscript = '';
+
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript + ' ';
+            lastWordTime = Date.now();
+          } else {
+            interimTranscript += transcript;
+          }
+        }
+
+        // Update the input field with current transcription
+        setValue("content", finalTranscript.trim() + ' ' + interimTranscript);
+
+        // If we have a significant pause after speaking, submit
+        if (finalTranscript && Date.now() - lastWordTime > PAUSE_THRESHOLD) {
+          handleSubmit((data) => {
+            if (data.content.trim()) {
+              sendMessage.mutate(data.content.trim());
+            }
+          })();
+          finalTranscript = '';
+        }
       };
 
       recognitionRef.current.onend = () => {
         setIsListening(false);
+        // If we were still listening and have content, submit it
+        const currentContent = finalTranscript.trim();
+        if (currentContent) {
+          handleSubmit((data) => {
+            if (data.content.trim()) {
+              sendMessage.mutate(data.content.trim());
+            }
+          })();
+        }
+      };
+
+      recognitionRef.current.onerror = (event: any) => {
+        console.error('Speech recognition error:', event.error);
+        setIsListening(false);
       };
     }
-  }, [speechSupported, setValue, handleSubmit]);
+  }, [speechSupported, setValue, handleSubmit, sendMessage]);
 
   // Speech synthesis for AI responses
   const speakResponse = (text: string) => {
