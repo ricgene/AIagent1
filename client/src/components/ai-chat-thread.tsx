@@ -242,7 +242,7 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
           {...register("content", { required: true })}
           placeholder="Ask about home improvement..."
           className="flex-1"
-          disabled={sendMessage.isPending || isListening}
+          disabled={sendMessage.isPending}
         />
         {speechSupported && (
           <Button
@@ -262,7 +262,7 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
         <Button
           type="submit"
           size="icon"
-          disabled={sendMessage.isPending || isListening}
+          disabled={sendMessage.isPending}
         >
           <Send className="h-4 w-4" />
         </Button>
