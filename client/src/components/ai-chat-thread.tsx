@@ -1,5 +1,5 @@
-import { useEffect, useRef } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useEffect, useRef, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -188,9 +188,6 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Filter for just US English voices
-  const usEnglishVoices = voices.filter(voice => voice.lang === 'en-US');
-
   return (
     <div className="flex flex-col h-[600px]">
       <div className="border-b p-4">
@@ -204,11 +201,13 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
               <SelectValue placeholder="Select a voice" />
             </SelectTrigger>
             <SelectContent>
-              {usEnglishVoices.map((voice) => (
-                <SelectItem key={voice.name} value={voice.name}>
-                  {voice.name}
-                </SelectItem>
-              ))}
+              {voices
+                .filter(voice => voice.lang === 'en-US')
+                .map((voice) => (
+                  <SelectItem key={voice.name} value={voice.name}>
+                    {voice.name}
+                  </SelectItem>
+                ))}
             </SelectContent>
           </Select>
         </div>
