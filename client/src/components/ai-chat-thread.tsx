@@ -66,22 +66,35 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
 
   // Speech synthesis for AI responses
   const speakResponse = (text: string) => {
-    const utterance = new SpeechSynthesisUtterance(text);
+    try {
+      console.log('Speaking response:', text);
+      // Cancel any ongoing speech
+      window.speechSynthesis.cancel();
 
-    // Select a more natural-sounding voice
-    const preferredVoice = voices.find(voice =>
-      voice.name.includes('Google') || // Prefer Google voices if available
-      voice.name.includes('Natural') ||
-      voice.name.includes('Premium')
-    ) || voices[0];
+      const utterance = new SpeechSynthesisUtterance(text);
 
-    // Customize voice settings
-    utterance.voice = preferredVoice;
-    utterance.pitch = 1.0;  // Natural pitch
-    utterance.rate = 0.9;   // Slightly slower rate for clarity
-    utterance.volume = 1.0; // Full volume
+      // Select a more natural-sounding voice
+      const preferredVoice = voices.find(voice =>
+        voice.name.includes('Google') || // Prefer Google voices if available
+        voice.name.includes('Natural') ||
+        voice.name.includes('Premium')
+      ) || voices[0];
 
-    window.speechSynthesis.speak(utterance);
+      // Customize voice settings
+      utterance.voice = preferredVoice;
+      utterance.pitch = 1.0;  // Natural pitch
+      utterance.rate = 0.9;   // Slightly slower rate for clarity
+      utterance.volume = 1.0; // Full volume
+
+      // Add event handlers to track speech status
+      utterance.onstart = () => console.log('Started speaking');
+      utterance.onend = () => console.log('Finished speaking');
+      utterance.onerror = (e) => console.error('Speech error:', e);
+
+      window.speechSynthesis.speak(utterance);
+    } catch (error) {
+      console.error('Error in speech synthesis:', error);
+    }
   };
 
   const toggleListening = () => {
@@ -114,6 +127,7 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
         // Speak the AI's response
         const aiResponse = newMessages.find(m => m.isAiAssistant);
         if (aiResponse) {
+          console.log('Found AI response to speak:', aiResponse.content);
           speakResponse(aiResponse.content);
         }
         return updatedMessages;
