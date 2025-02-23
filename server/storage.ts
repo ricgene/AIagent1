@@ -89,6 +89,7 @@ export class MemStorage implements IStorage {
       ...insertMessage,
       id,
       timestamp: new Date(),
+      isAiAssistant: insertMessage.isAiAssistant ?? false
     };
     this.messages.push(message);
     return message;
