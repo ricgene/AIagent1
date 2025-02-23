@@ -25,6 +25,7 @@ export const messages = pgTable("messages", {
   toId: integer("to_id").notNull(),
   content: text("content").notNull(),
   timestamp: timestamp("timestamp").notNull().defaultNow(),
+  isAiAssistant: boolean("is_ai_assistant").notNull().default(false),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
@@ -45,6 +46,7 @@ export const insertMessageSchema = createInsertSchema(messages).pick({
   fromId: true,
   toId: true,
   content: true,
+  isAiAssistant: true,
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;

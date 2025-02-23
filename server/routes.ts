@@ -5,6 +5,7 @@ import { storage } from "./storage";
 import { insertUserSchema, insertBusinessSchema, insertMessageSchema } from "@shared/schema";
 import { matchBusinessesToQuery } from "./anthropic";
 import { ZodError } from "zod";
+import { getAssistantResponse } from "./assistant";
 
 export async function registerRoutes(app: Express) {
   const httpServer = createServer(app);
@@ -175,6 +176,61 @@ export async function registerRoutes(app: Express) {
       }
 
       res.json(message);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        res.status(400).json({ error: error.errors });
+      } else if (error instanceof Error) {
+        res.status(500).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: "Internal server error" });
+      }
+    }
+  });
+
+  // AI Assistant routes
+  app.get("/api/messages/ai/:userId", async (req, res) => {
+    try {
+      const messages = await storage.getMessages(
+        parseInt(req.params.userId),
+        0  // Using 0 as the AI assistant's ID
+      );
+      res.json(messages);
+    } catch (error) {
+      if (error instanceof Error) {
+        res.status(500).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: "Internal server error" });
+      }
+    }
+  });
+
+  app.post("/api/messages/ai", async (req, res) => {
+    try {
+      const { fromId, content } = req.body;
+
+      // Save user message
+      const userMessage = await storage.createMessage({
+        fromId,
+        toId: 0,  // AI assistant ID
+        content,
+        isAiAssistant: false
+      });
+
+      // Get conversation history
+      const messages = await storage.getMessages(fromId, 0);
+
+      // Get AI response
+      const aiResponse = await getAssistantResponse(messages);
+
+      // Save AI response
+      const assistantMessage = await storage.createMessage({
+        fromId: 0,  // AI assistant ID
+        toId: fromId,
+        content: aiResponse,
+        isAiAssistant: true
+      });
+
+      res.json([userMessage, assistantMessage]);
     } catch (error) {
       if (error instanceof ZodError) {
         res.status(400).json({ error: error.errors });
