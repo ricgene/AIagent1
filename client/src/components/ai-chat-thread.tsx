@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useRef } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,7 @@ interface AIChatThreadProps {
 
 export function AIChatThread({ userId }: AIChatThreadProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const { register, handleSubmit, reset, setValue } = useForm<{ content: string }>();
   const queryClient = useQueryClient();
   const [isListening, setIsListening] = useState(false);
@@ -118,7 +119,13 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
         }
 
         // Update the input field with current transcription
-        setValue("content", finalTranscript.trim() + ' ' + interimTranscript);
+        const content = finalTranscript.trim() + ' ' + interimTranscript;
+        setValue("content", content);
+
+        // Scroll the input to show the latest text
+        if (inputRef.current) {
+          inputRef.current.scrollLeft = inputRef.current.scrollWidth;
+        }
       };
 
       recognitionRef.current.onend = () => {
@@ -176,6 +183,7 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
     }
   };
 
+  // Scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -205,34 +213,36 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
           </Select>
         </div>
       </div>
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.length === 0 ? (
-          <div className="flex justify-start">
-            <Card className="max-w-[80%] p-3 bg-muted">
-              How can I help with your home improvement needs today?
-            </Card>
-          </div>
-        ) : (
-          messages.map((message) => (
-            <div
-              key={message.id}
-              className={`flex ${
-                !message.isAiAssistant ? "justify-end" : "justify-start"
-              }`}
-            >
-              <Card
-                className={`max-w-[80%] p-3 ${
-                  !message.isAiAssistant
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted"
-                }`}
-              >
-                {message.content}
+      <div className="flex-1 overflow-y-auto p-4 flex flex-col-reverse">
+        <div className="space-y-4">
+          {messages.length === 0 ? (
+            <div className="flex justify-start">
+              <Card className="max-w-[80%] p-3 bg-muted">
+                How can I help with your home improvement needs today?
               </Card>
             </div>
-          ))
-        )}
-        <div ref={messagesEndRef} />
+          ) : (
+            messages.map((message) => (
+              <div
+                key={message.id}
+                className={`flex ${
+                  !message.isAiAssistant ? "justify-end" : "justify-start"
+                }`}
+              >
+                <Card
+                  className={`max-w-[80%] p-3 ${
+                    !message.isAiAssistant
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted"
+                  }`}
+                >
+                  {message.content}
+                </Card>
+              </div>
+            ))
+          )}
+          <div ref={messagesEndRef} />
+        </div>
       </div>
       <form
         onSubmit={handleSubmit((data) => sendMessage.mutate(data.content))}
@@ -240,8 +250,9 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
       >
         <Input
           {...register("content", { required: true })}
+          ref={inputRef}
           placeholder="Ask about home improvement..."
-          className="flex-1"
+          className="flex-1 overflow-x-auto whitespace-nowrap"
           disabled={sendMessage.isPending}
         />
         {speechSupported && (
