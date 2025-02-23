@@ -206,6 +206,7 @@ export async function registerRoutes(app: Express) {
 
   app.post("/api/messages/ai", async (req, res) => {
     try {
+      console.log("Received AI message request:", req.body);
       const { fromId, content } = req.body;
 
       // Save user message
@@ -215,12 +216,15 @@ export async function registerRoutes(app: Express) {
         content,
         isAiAssistant: false
       });
+      console.log("Created user message:", userMessage);
 
       // Get conversation history
       const messages = await storage.getMessages(fromId, 0);
+      console.log("Retrieved message history:", messages);
 
       // Get AI response
       const aiResponse = await getAssistantResponse(messages);
+      console.log("Received AI response:", aiResponse);
 
       // Save AI response
       const assistantMessage = await storage.createMessage({
@@ -229,9 +233,12 @@ export async function registerRoutes(app: Express) {
         content: aiResponse,
         isAiAssistant: true
       });
+      console.log("Created assistant message:", assistantMessage);
 
+      // Return both messages to update the UI
       res.json([userMessage, assistantMessage]);
     } catch (error) {
+      console.error("AI message error:", error);
       if (error instanceof ZodError) {
         res.status(400).json({ error: error.errors });
       } else if (error instanceof Error) {
