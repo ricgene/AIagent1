@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Send, Mic, MicOff } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -21,7 +21,7 @@ interface AIChatThreadProps {
 
 export function AIChatThread({ userId }: AIChatThreadProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [transcriptText, setTranscriptText] = useState('');
   const { register, handleSubmit, reset, setValue, watch } = useForm<{ content: string }>();
   const queryClient = useQueryClient();
@@ -97,6 +97,14 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
     };
   }, []);
 
+  // Auto-resize textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
+    }
+  }, [watch("content"), transcriptText]);
+
   // Initialize speech recognition
   useEffect(() => {
     if (speechSupported) {
@@ -126,11 +134,6 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
         // Update both the state and the form input
         setTranscriptText(displayText);
         setValue("content", displayText, { shouldValidate: true });
-
-        // Scroll the input to show the latest text
-        if (inputRef.current) {
-          inputRef.current.scrollLeft = inputRef.current.scrollWidth;
-        }
       };
 
       recognitionRef.current.onstart = () => {
@@ -258,12 +261,14 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
         onSubmit={handleSubmit((data) => sendMessage.mutate(data.content))}
         className="border-t p-4 flex gap-2"
       >
-        <Input
+        <Textarea
+          ref={textareaRef}
           value={watch("content") || transcriptText}
           onChange={(e) => setValue("content", e.target.value)}
           placeholder="Ask about home improvement..."
-          className="flex-1 overflow-x-auto whitespace-nowrap"
+          className="flex-1 min-h-[40px] max-h-[120px] resize-none"
           disabled={sendMessage.isPending}
+          rows={1}
         />
         {speechSupported && (
           <Button
