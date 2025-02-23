@@ -19,11 +19,25 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
   const [isListening, setIsListening] = useState(false);
   const [speechSupported] = useState('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
   const recognitionRef = useRef<any>(null);
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const queryKey = [`/api/messages/ai/${userId}`];
 
-  const { data: messages = [] } = useQuery<Message[]>({
-    queryKey,
-  });
+  // Load available voices
+  useEffect(() => {
+    const loadVoices = () => {
+      const availableVoices = window.speechSynthesis.getVoices();
+      if (availableVoices.length > 0) {
+        setVoices(availableVoices);
+      }
+    };
+
+    loadVoices(); // Try loading immediately
+    window.speechSynthesis.onvoiceschanged = loadVoices; // Load when voices become available
+
+    return () => {
+      window.speechSynthesis.onvoiceschanged = null;
+    };
+  }, []);
 
   // Initialize speech recognition
   useEffect(() => {
@@ -48,6 +62,20 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
   // Speech synthesis for AI responses
   const speakResponse = (text: string) => {
     const utterance = new SpeechSynthesisUtterance(text);
+
+    // Select a more natural-sounding voice
+    const preferredVoice = voices.find(voice =>
+      voice.name.includes('Google') || // Prefer Google voices if available
+      voice.name.includes('Natural') ||
+      voice.name.includes('Premium')
+    ) || voices[0];
+
+    // Customize voice settings
+    utterance.voice = preferredVoice;
+    utterance.pitch = 1.0;  // Natural pitch
+    utterance.rate = 0.9;   // Slightly slower rate for clarity
+    utterance.volume = 1.0; // Full volume
+
     window.speechSynthesis.speak(utterance);
   };
 
