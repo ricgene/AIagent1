@@ -30,6 +30,36 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
   const [selectedVoice, setSelectedVoice] = useState<string | null>(null);
   const queryKey = [`/api/messages/ai/${userId}`];
 
+  // Define sendMessage mutation first
+  const sendMessage = useMutation({
+    mutationFn: async (content: string) => {
+      console.log("Sending message:", content);
+      const response = await apiRequest("POST", "/api/messages/ai", {
+        fromId: userId,
+        content,
+      });
+      const newMessages: Message[] = await response.json();
+      console.log("Received new messages:", newMessages);
+      return newMessages;
+    },
+    onSuccess: (newMessages) => {
+      console.log("Mutation succeeded, updating messages:", newMessages);
+      queryClient.setQueryData(queryKey, (old: Message[] = []) => {
+        console.log("Old messages:", old);
+        const updatedMessages = [...old, ...newMessages];
+        console.log("Updated messages:", updatedMessages);
+        // Speak the AI's response
+        const aiResponse = newMessages.find(m => m.isAiAssistant);
+        if (aiResponse) {
+          console.log('Found AI response to speak:', aiResponse.content);
+          speakResponse(aiResponse.content);
+        }
+        return updatedMessages;
+      });
+      reset();
+    },
+  });
+
   // Query for messages
   const { data: messages = [] } = useQuery<Message[]>({
     queryKey,
@@ -122,7 +152,7 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
         setIsListening(false);
       };
     }
-  }, [speechSupported, setValue, handleSubmit, sendMessage]);
+  }, [speechSupported, setValue, handleSubmit]);
 
   // Speech synthesis for AI responses
   const speakResponse = (text: string) => {
@@ -167,35 +197,6 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
       setIsListening(false);
     }
   };
-
-  const sendMessage = useMutation({
-    mutationFn: async (content: string) => {
-      console.log("Sending message:", content);
-      const response = await apiRequest("POST", "/api/messages/ai", {
-        fromId: userId,
-        content,
-      });
-      const newMessages: Message[] = await response.json();
-      console.log("Received new messages:", newMessages);
-      return newMessages;
-    },
-    onSuccess: (newMessages) => {
-      console.log("Mutation succeeded, updating messages:", newMessages);
-      queryClient.setQueryData(queryKey, (old: Message[] = []) => {
-        console.log("Old messages:", old);
-        const updatedMessages = [...old, ...newMessages];
-        console.log("Updated messages:", updatedMessages);
-        // Speak the AI's response
-        const aiResponse = newMessages.find(m => m.isAiAssistant);
-        if (aiResponse) {
-          console.log('Found AI response to speak:', aiResponse.content);
-          speakResponse(aiResponse.content);
-        }
-        return updatedMessages;
-      });
-      reset();
-    },
-  });
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
