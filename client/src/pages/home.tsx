@@ -44,7 +44,9 @@ export default function Home() {
 
   const onSubmit = async (data: LoginForm) => {
     try {
-      console.log("Attempting login with:", data.email);
+      console.log("Attempting login with email:", data.email);
+      console.log("Firebase auth instance status:", auth ? "initialized" : "not initialized");
+
       const userCredential = await signInWithEmailAndPassword(
         auth,
         data.email,
@@ -60,12 +62,22 @@ export default function Home() {
       console.error("Login error:", error);
       // More specific error messages based on Firebase error codes
       const errorMessage = error.code === 'auth/user-not-found' 
-        ? "No account found with this email"
+        ? "No account found with this email. Please check your email or sign up."
         : error.code === 'auth/wrong-password'
-        ? "Incorrect password"
+        ? "Incorrect password. Please try again."
         : error.code === 'auth/invalid-email'
-        ? "Invalid email format"
-        : error.message || "Login failed";
+        ? "Invalid email format. Please enter a valid email address."
+        : error.code === 'auth/invalid-credential'
+        ? "Invalid credentials. Please check your email and password."
+        : error.code === 'auth/operation-not-allowed'
+        ? "Email/Password sign-in is not enabled. Please contact support."
+        : error.message || "Login failed. Please try again.";
+
+      console.error("Detailed error info:", {
+        code: error.code,
+        message: error.message,
+        formattedMessage: errorMessage
+      });
 
       toast({
         variant: "destructive",
