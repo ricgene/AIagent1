@@ -64,7 +64,7 @@ export default function Home() {
       <Card className="mt-8">
         <CardHeader>
           <CardTitle>Welcome to AIConnect</CardTitle>
-          <CardDescription>
+          <CardDescription className="text-primary">
             Connect with businesses using AI-powered matching
           </CardDescription>
         </CardHeader>
