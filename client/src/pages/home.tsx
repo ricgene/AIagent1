@@ -79,6 +79,8 @@ export default function Home() {
         ? "Invalid credentials. Please check your email and password."
         : error.code === 'auth/operation-not-allowed'
         ? "Email/Password sign-in is not enabled. Please contact support."
+        : error.code === 'auth/auth-domain-config-required'
+        ? "This domain is not authorized for Firebase Authentication. Please contact support."
         : error.message || "Login failed. Please try again.";
 
       console.error("Detailed error info:", {
@@ -122,6 +124,8 @@ export default function Home() {
         ? "Email/Password registration is not enabled. Please contact support."
         : error.code === 'auth/weak-password'
         ? "Password is too weak. Please use at least 6 characters."
+        : error.code === 'auth/auth-domain-config-required'
+        ? "This domain is not authorized for Firebase Authentication. Please contact support."
         : error.message || "Registration failed. Please try again.";
 
       toast({
