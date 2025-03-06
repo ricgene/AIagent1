@@ -44,6 +44,7 @@ export default function Home() {
 
   const onSubmit = async (data: LoginForm) => {
     try {
+      console.log("Attempting login with:", data.email);
       const userCredential = await signInWithEmailAndPassword(
         auth,
         data.email,
@@ -57,10 +58,19 @@ export default function Home() {
       setLocation("/search");
     } catch (error: any) {
       console.error("Login error:", error);
+      // More specific error messages based on Firebase error codes
+      const errorMessage = error.code === 'auth/user-not-found' 
+        ? "No account found with this email"
+        : error.code === 'auth/wrong-password'
+        ? "Incorrect password"
+        : error.code === 'auth/invalid-email'
+        ? "Invalid email format"
+        : error.message || "Login failed";
+
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message || "Invalid email or password",
+        description: errorMessage,
       });
     }
   };
