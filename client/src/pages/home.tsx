@@ -20,6 +20,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
+import { auth } from "@/lib/firebase";
+import { signInWithEmailAndPassword } from "firebase/auth";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -42,18 +44,23 @@ export default function Home() {
 
   const onSubmit = async (data: LoginForm) => {
     try {
-      // We'll implement the actual login logic later
-      console.log("Login data:", data);
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        data.email,
+        data.password
+      );
+      console.log("Login successful:", userCredential.user);
       toast({
         title: "Success",
         description: "Logged in successfully",
       });
       setLocation("/search");
-    } catch (error) {
+    } catch (error: any) {
+      console.error("Login error:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Invalid email or password",
+        description: error.message || "Invalid email or password",
       });
     }
   };
