@@ -84,18 +84,31 @@ app.use((req, res, next) => {
     }
 
     const PORT = PORTS[index];
-    server.listen(PORT, "0.0.0.0", () => {
-      log(`Server running on port ${PORT}`);
-    }).on('error', (err: any) => {
-      if (err.code === 'EADDRINUSE') {
-        log(`Port ${PORT} is already in use. Trying next port...`);
-        server.close();
-        tryPorts(index + 1);
-      } else {
-        log(`Error starting server: ${err.message}`);
-        process.exit(1);
-      }
-    });
+    
+    // First check if the port is in use before trying to listen
+    const net = require('net');
+    const tester = net.createServer()
+      .once('error', (err: any) => {
+        if (err.code === 'EADDRINUSE') {
+          log(`Port ${PORT} is already in use. Trying next port...`);
+          tryPorts(index + 1);
+        } else {
+          log(`Error checking port ${PORT}: ${err.message}`);
+          tryPorts(index + 1);
+        }
+      })
+      .once('listening', () => {
+        tester.close();
+        // Port is available, now try to start the actual server
+        server.listen(PORT, "0.0.0.0", () => {
+          log(`Server running on port ${PORT}`);
+        }).on('error', (err: any) => {
+          log(`Error starting server on port ${PORT}: ${err.message}`);
+          server.close();
+          tryPorts(index + 1);
+        });
+      })
+      .listen(PORT, "0.0.0.0");
   };
   
   tryPorts();
