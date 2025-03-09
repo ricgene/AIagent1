@@ -40,6 +40,8 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
           const availableVoices = window.speechSynthesis.getVoices();
           if (availableVoices.length === 0) {
             console.warn("No voices available for speech synthesis");
+          } else {
+            console.log("Available voices:", availableVoices.map(v => v.name));
           }
         };
 
@@ -82,7 +84,14 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
       const utterance = new SpeechSynthesisUtterance(text);
 
       // Configure utterance with fixed voice
-      utterance.voice = window.speechSynthesis.getVoices().find(v => v.name === "en-US-Chirp-HD-F") || null;
+      const voices = window.speechSynthesis.getVoices();
+      const desiredVoice = voices.find(v => v.name === "en-US-Chirp-HD-F");
+      utterance.voice = desiredVoice || voices.find(v => v.lang.startsWith('en')) || null;
+
+      if (!utterance.voice) {
+        console.warn("Could not find desired voice. Using default voice if available.");
+      }
+
       utterance.volume = 1.0;     // Full volume for mobile
       utterance.rate = 1.0;       // Normal speed
       utterance.pitch = 1.0;      // Normal pitch
