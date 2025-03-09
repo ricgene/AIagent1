@@ -140,7 +140,8 @@ export default function Home() {
     <div className="container max-w-lg mx-auto px-4 pt-8">
       <Card className="mt-8">
         <CardHeader className="text-center">
-          <CardDescription className="text-primary-foreground">
+          <CardTitle className="text-2xl md:text-3xl">AIConnect</CardTitle>
+          <CardDescription>
             Connect with businesses using AI-powered matching
           </CardDescription>
         </CardHeader>
