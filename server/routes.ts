@@ -71,16 +71,44 @@ export async function registerRoutes(app: Express) {
   const clients = new Map<number, WebSocket>();
 
   wss.on("connection", (ws) => {
+    console.log("WebSocket connection established");
+    
     ws.on("message", (data) => {
       try {
         const msg = JSON.parse(data.toString());
         if (msg.type === "auth" && msg.userId) {
           clients.set(msg.userId, ws);
+          console.log(`User ${msg.userId} authenticated via WebSocket`);
         }
       } catch (e) {
         console.error("WebSocket message error:", e);
       }
     });
+    
+    ws.on("error", (error) => {
+      console.error("WebSocket error:", error);
+    });
+    
+    ws.on("close", (code, reason) => {
+      console.log(`WebSocket closed with code ${code}. Reason: ${reason}`);
+      // Remove client from the map when disconnected
+      for (const [userId, client] of clients.entries()) {
+        if (client === ws) {
+          clients.delete(userId);
+          console.log(`User ${userId} disconnected`);
+          break;
+        }
+      }
+    });
+    
+    // Send a ping every 30 seconds to keep the connection alive
+    const pingInterval = setInterval(() => {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.ping();
+      } else {
+        clearInterval(pingInterval);
+      }
+    }, 30000);
   });
 
   // User routes
