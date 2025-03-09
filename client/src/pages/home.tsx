@@ -147,9 +147,9 @@ export default function Home() {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="login" className="text-foreground">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login" className="text-primary">Login</TabsTrigger>
-              <TabsTrigger value="register" className="text-primary">Register</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 bg-primary/10">
+              <TabsTrigger value="login" className="data-[state=active]:bg-primary data-[state=active]:text-white">Login</TabsTrigger>
+              <TabsTrigger value="register" className="data-[state=active]:bg-primary data-[state=active]:text-white">Register</TabsTrigger>
             </TabsList>
 
             <TabsContent value="login">
@@ -163,11 +163,12 @@ export default function Home() {
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Email</FormLabel>
+                        <FormLabel className="text-primary">Email</FormLabel>
                         <FormControl>
                           <Input
                             type="email"
                             placeholder="Enter your email"
+                            className="border-primary/20 focus:border-primary"
                             {...field}
                           />
                         </FormControl>
@@ -180,11 +181,12 @@ export default function Home() {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Password</FormLabel>
+                        <FormLabel className="text-primary">Password</FormLabel>
                         <FormControl>
                           <Input
                             type="password"
                             placeholder="Enter your password"
+                            className="border-primary/20 focus:border-primary"
                             {...field}
                           />
                         </FormControl>
@@ -210,11 +212,12 @@ export default function Home() {
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Email</FormLabel>
+                        <FormLabel className="text-primary">Email</FormLabel>
                         <FormControl>
                           <Input
                             type="email"
                             placeholder="Enter your email"
+                            className="border-primary/20 focus:border-primary"
                             {...field}
                           />
                         </FormControl>
@@ -227,11 +230,12 @@ export default function Home() {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Password</FormLabel>
+                        <FormLabel className="text-primary">Password</FormLabel>
                         <FormControl>
                           <Input
                             type="password"
                             placeholder="Choose a password"
+                            className="border-primary/20 focus:border-primary"
                             {...field}
                           />
                         </FormControl>
