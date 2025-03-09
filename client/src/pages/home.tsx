@@ -54,19 +54,23 @@ export default function Home() {
   const onLogin = async (data: AuthForm) => {
     try {
       console.log("Attempting login with email:", data.email);
-      console.log("Firebase auth instance status:", auth ? "initialized" : "not initialized");
-
       const userCredential = await signInWithEmailAndPassword(
         auth,
         data.email,
         data.password
       );
       console.log("Login successful:", userCredential.user);
+
+      // First show success message
       toast({
         title: "Success",
         description: "Logged in successfully",
       });
-      setLocation("/messages");
+
+      // Then navigate to messages page
+      console.log("Navigating to messages page");
+      setTimeout(() => setLocation("/messages"), 500);
+
     } catch (error: any) {
       console.error("Login error:", error);
       const errorMessage = error.code === 'auth/user-not-found'
@@ -83,12 +87,6 @@ export default function Home() {
         ? "This domain is not authorized for Firebase Authentication. Please contact support."
         : error.message || "Login failed. Please try again.";
 
-      console.error("Detailed error info:", {
-        code: error.code,
-        message: error.message,
-        formattedMessage: errorMessage
-      });
-
       toast({
         variant: "destructive",
         title: "Error",
@@ -100,7 +98,6 @@ export default function Home() {
   const onRegister = async (data: AuthForm) => {
     try {
       console.log("Attempting registration with email:", data.email);
-
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         data.email,
@@ -172,7 +169,7 @@ export default function Home() {
                             {...field}
                           />
                         </FormControl>
-                        <FormMessage />
+                        <FormMessage className="text-primary" />
                       </FormItem>
                     )}
                   />
@@ -190,11 +187,11 @@ export default function Home() {
                             {...field}
                           />
                         </FormControl>
-                        <FormMessage />
+                        <FormMessage className="text-primary" />
                       </FormItem>
                     )}
                   />
-                  <Button type="submit" variant="default" className="w-full bg-primary hover:bg-primary/90">
+                  <Button type="submit" variant="default" className="w-full bg-primary hover:bg-primary/90 text-white">
                     Login
                   </Button>
                 </form>
@@ -221,7 +218,7 @@ export default function Home() {
                             {...field}
                           />
                         </FormControl>
-                        <FormMessage />
+                        <FormMessage className="text-primary" />
                       </FormItem>
                     )}
                   />
@@ -239,11 +236,11 @@ export default function Home() {
                             {...field}
                           />
                         </FormControl>
-                        <FormMessage />
+                        <FormMessage className="text-primary" />
                       </FormItem>
                     )}
                   />
-                  <Button type="submit" variant="default" className="w-full bg-primary hover:bg-primary/90">
+                  <Button type="submit" variant="default" className="w-full bg-primary hover:bg-primary/90 text-white">
                     Create Account
                   </Button>
                 </form>
