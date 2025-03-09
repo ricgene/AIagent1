@@ -168,7 +168,7 @@ export default function Home() {
                           <Input
                             type="email"
                             placeholder="Enter your email"
-                            className="border-primary/20 focus:border-primary"
+                            className="bg-primary/5 border-primary/20 focus:border-primary focus:bg-primary/10 text-primary focus:ring-primary/20"
                             {...field}
                           />
                         </FormControl>
@@ -186,7 +186,7 @@ export default function Home() {
                           <Input
                             type="password"
                             placeholder="Enter your password"
-                            className="border-primary/20 focus:border-primary"
+                            className="bg-primary/5 border-primary/20 focus:border-primary focus:bg-primary/10 text-primary focus:ring-primary/20"
                             {...field}
                           />
                         </FormControl>
@@ -217,7 +217,7 @@ export default function Home() {
                           <Input
                             type="email"
                             placeholder="Enter your email"
-                            className="border-primary/20 focus:border-primary"
+                            className="bg-primary/5 border-primary/20 focus:border-primary focus:bg-primary/10 text-primary focus:ring-primary/20"
                             {...field}
                           />
                         </FormControl>
@@ -235,7 +235,7 @@ export default function Home() {
                           <Input
                             type="password"
                             placeholder="Choose a password"
-                            className="border-primary/20 focus:border-primary"
+                            className="bg-primary/5 border-primary/20 focus:border-primary focus:bg-primary/10 text-primary focus:ring-primary/20"
                             {...field}
                           />
                         </FormControl>
