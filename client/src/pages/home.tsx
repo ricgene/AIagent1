@@ -23,6 +23,13 @@ import { useLocation } from "wouter";
 import { auth } from "@/lib/firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useState, useEffect } from 'react';
+
+// Assume isFirebaseInitialized is defined elsewhere, perhaps in lib/firebase or a separate utility file.
+const isFirebaseInitialized = () => {
+  //Replace with your actual Firebase initialization check.
+  return true; //For testing purposes
+};
 
 const authSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -34,6 +41,18 @@ type AuthForm = z.infer<typeof authSchema>;
 export default function Home() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  const [isInitializing, setIsInitializing] = useState(true);
+
+  useEffect(() => {
+    const checkInitialization = () => {
+      if (isFirebaseInitialized()) {
+        setIsInitializing(false);
+        return;
+      }
+      setTimeout(checkInitialization, 100);
+    };
+    checkInitialization();
+  }, []);
 
   const loginForm = useForm<AuthForm>({
     resolver: zodResolver(authSchema),
@@ -53,6 +72,15 @@ export default function Home() {
 
   const onLogin = async (data: AuthForm) => {
     try {
+      if (!isFirebaseInitialized()) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Authentication system is still initializing. Please try again in a moment.",
+        });
+        return;
+      }
+
       console.log("Attempting login with email:", data.email);
       const userCredential = await signInWithEmailAndPassword(
         auth,
@@ -61,14 +89,11 @@ export default function Home() {
       );
       console.log("Login successful:", userCredential.user);
 
-      // First show success message
       toast({
         title: "Success",
         description: "Logged in successfully",
       });
 
-      // Then navigate to messages page
-      console.log("Navigating to messages page");
       setTimeout(() => setLocation("/messages"), 500);
 
     } catch (error: any) {
@@ -132,6 +157,16 @@ export default function Home() {
       });
     }
   };
+
+  if (isInitializing) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-primary">
+        <div className="text-white">
+          Initializing authentication...
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container max-w-lg mx-auto px-4 pt-8">

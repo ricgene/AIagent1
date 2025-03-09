@@ -2,7 +2,6 @@ import { initializeApp } from "firebase/app";
 import { getAuth, setPersistence, browserLocalPersistence } from "firebase/auth";
 import { getAnalytics } from "firebase/analytics";
 
-// Verify that all required environment variables are present
 const requiredEnvVars = [
   'VITE_FIREBASE_API_KEY',
   'VITE_FIREBASE_PROJECT_ID',
@@ -29,40 +28,46 @@ const firebaseConfig = {
   measurementId: "G-QGEQ4MTXR7"
 };
 
-console.log('Current Firebase Project ID:', firebaseConfig.projectId);
-console.log('Firebase Configuration:', {
-  projectId: firebaseConfig.projectId,
-  authDomain: firebaseConfig.authDomain,
-  storageBucket: firebaseConfig.storageBucket,
-  // Don't log apiKey or appId for security
-});
+console.log('Initializing Firebase with project:', firebaseConfig.projectId);
 
-let auth: any; // Declare auth outside the try block
+let app: any;
+let auth: any;
 let analytics: any;
+let initialized = false;
 
 try {
   // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
+  app = initializeApp(firebaseConfig);
   console.log('Firebase app initialized successfully');
-  console.log('Connected to Firebase project:', firebaseConfig.projectId);
 
-  // Initialize Firebase Authentication and get a reference to the service
+  // Initialize Firebase Authentication
   auth = getAuth(app);
-  analytics = getAnalytics(app);
-  console.log('Firebase auth and analytics initialized successfully');
+  console.log('Firebase auth initialized');
 
-  // Enable persistence to remember user between page reloads
+  // Initialize Analytics
+  analytics = getAnalytics(app);
+  console.log('Firebase analytics initialized');
+
+  // Set persistence
   setPersistence(auth, browserLocalPersistence)
     .then(() => {
       console.log('Firebase auth persistence set to local');
+      initialized = true;
+      console.log('Firebase initialization complete');
     })
     .catch((error) => {
       console.error('Error setting auth persistence:', error);
+      throw error;
     });
 } catch (error) {
-  console.error('Error initializing Firebase:', error);
+  console.error('Error during Firebase initialization:', error);
   throw error;
 }
 
-// Export the auth instance at the module level
+// Export a function to check if Firebase is initialized
+export function isFirebaseInitialized() {
+  return initialized;
+}
+
+// Export the Firebase instances
 export { auth, analytics };
