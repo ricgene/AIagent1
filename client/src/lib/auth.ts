@@ -45,7 +45,7 @@ export const resetPassword = async (email: string) => {
   try {
     const domain = window.location.host;
     const protocol = window.location.protocol;
-    const fullUrl = `${protocol}//${domain}/auth`;
+    const fullUrl = `${protocol}//${domain}/`;  // Redirect to root instead of /auth
 
     console.log("Password reset attempt:", {
       email,
