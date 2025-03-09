@@ -67,6 +67,14 @@ export async function registerRoutes(app: Express) {
 
   // WebSocket setup for real-time messaging
   const wss = new WebSocketServer({ server: httpServer, path: "/ws" });
+  
+  // Ensure WebSocket server shuts down cleanly
+  httpServer.on('close', () => {
+    wss.clients.forEach(client => {
+      client.terminate();
+    });
+    console.log("WebSocket server closed");
+  });
 
   const clients = new Map<number, WebSocket>();
 

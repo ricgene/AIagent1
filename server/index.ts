@@ -56,29 +56,47 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // Serve the app on port 3000 instead of 5000 to avoid conflicts
-  // this serves both the API and the client
-  const PORT = 3000;
+  // Try ports in sequence until we find an available one
+  const PORTS = [3000, 4000, 8080, 8000, 3001];
   
   // Set longer timeouts to prevent connection issues
   server.setTimeout(120000); // 2 minutes
   
-  // Check if port is in use, if so try to kill the process
-  const checkPort = () => {
+  // Clean up function to handle proper shutdown
+  const cleanUp = () => {
+    log("Server shutting down...");
+    server.close(() => {
+      log("Server closed successfully");
+      process.exit(0);
+    });
+  };
+  
+  // Register cleanup handlers
+  process.on("SIGINT", cleanUp);
+  process.on("SIGTERM", cleanUp);
+  
+  // Try ports sequentially until we find one that works
+  const tryPorts = (index = 0) => {
+    if (index >= PORTS.length) {
+      log("No available ports found. Please free up a port and try again.");
+      process.exit(1);
+      return;
+    }
+
+    const PORT = PORTS[index];
     server.listen(PORT, "0.0.0.0", () => {
-      log(`serving on port ${PORT}`);
+      log(`Server running on port ${PORT}`);
     }).on('error', (err: any) => {
       if (err.code === 'EADDRINUSE') {
-        log(`Port ${PORT} is already in use. Trying again in 5 seconds...`);
-        setTimeout(() => {
-          server.close();
-          checkPort();
-        }, 5000);
+        log(`Port ${PORT} is already in use. Trying next port...`);
+        server.close();
+        tryPorts(index + 1);
       } else {
         log(`Error starting server: ${err.message}`);
+        process.exit(1);
       }
     });
   };
   
-  checkPort();
+  tryPorts();
 })();
