@@ -22,12 +22,6 @@ export function MobileNav() {
           <Link href="/" className="font-medium">
             Home
           </Link>
-          <Link href="/search" className="font-medium">
-            Find Businesses
-          </Link>
-          <Link href="/business/profile" className="font-medium">
-            Business Profile
-          </Link>
           <Link href="/messages" className="font-medium">
             Messages
           </Link>

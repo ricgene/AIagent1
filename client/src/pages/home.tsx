@@ -140,8 +140,7 @@ export default function Home() {
     <div className="container max-w-lg mx-auto px-4 pt-8">
       <Card className="mt-8">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl md:text-3xl hidden md:block">AIConnect</CardTitle>
-          <CardDescription className="text-primary">
+          <CardDescription className="text-primary-foreground">
             Connect with businesses using AI-powered matching
           </CardDescription>
         </CardHeader>
@@ -163,7 +162,7 @@ export default function Home() {
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Email</FormLabel>
+                        <FormLabel className="text-primary-foreground">Email</FormLabel>
                         <FormControl>
                           <Input
                             type="email"
@@ -180,7 +179,7 @@ export default function Home() {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Password</FormLabel>
+                        <FormLabel className="text-primary-foreground">Password</FormLabel>
                         <FormControl>
                           <Input
                             type="password"
@@ -210,7 +209,7 @@ export default function Home() {
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Email</FormLabel>
+                        <FormLabel className="text-primary-foreground">Email</FormLabel>
                         <FormControl>
                           <Input
                             type="email"
@@ -227,7 +226,7 @@ export default function Home() {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Password</FormLabel>
+                        <FormLabel className="text-primary-foreground">Password</FormLabel>
                         <FormControl>
                           <Input
                             type="password"
