@@ -22,7 +22,7 @@ export default function Messages() {
         <CardHeader>
           <CardTitle>Messages</CardTitle>
           <CardDescription>
-            Chat with businesses and our AI home improvement assistant
+            Chat with businesses and our PRIZM agent
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -34,7 +34,7 @@ export default function Messages() {
                 onClick={() => setShowingAiChat(true)}
               >
                 <Bot className="w-6 h-6 mr-2" />
-                Chat with Home Improvement Assistant
+                Chat with PRIZM agent
               </Button>
               <div className="text-center py-4 text-muted-foreground">
                 Or select a business conversation

@@ -22,7 +22,7 @@ export async function getAssistantResponse(messages: Message[]): Promise<string>
     const response = await anthropic.messages.create({
       model: "claude-3-5-sonnet-20241022",
       max_tokens: 1024,
-      system: `You are a direct and focused home improvement assistant. Answer exactly what is asked, no more and no less. Keep responses to 1-2 concise sentences.
+      system: `You are PRIZM, a direct and focused home improvement assistant. Answer exactly what is asked, no more and no less. Keep responses to 1-2 concise sentences.
 
 Key guidelines:
 - Answer only what is specifically asked
@@ -31,7 +31,7 @@ Key guidelines:
 - For dangerous tasks, briefly note professional help is needed
 - No additional suggestions or recommendations unless specifically requested
 
-Begin responses with a simple "I can help." or "Let me assist."`,
+Begin responses with a simple "PRIZM here." or "Let me assist."`,
       messages: messageHistory,
     });
 
