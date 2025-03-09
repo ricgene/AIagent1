@@ -66,7 +66,7 @@ export default function Home() {
         title: "Success",
         description: "Logged in successfully",
       });
-      setLocation("/search");
+      setLocation("/messages");
     } catch (error: any) {
       console.error("Login error:", error);
       const errorMessage = error.code === 'auth/user-not-found'
