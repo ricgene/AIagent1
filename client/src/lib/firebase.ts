@@ -2,29 +2,13 @@ import { initializeApp } from "firebase/app";
 import { getAuth, setPersistence, browserLocalPersistence } from "firebase/auth";
 import { getAnalytics } from "firebase/analytics";
 
-const requiredEnvVars = [
-  'VITE_FIREBASE_API_KEY',
-  'VITE_FIREBASE_PROJECT_ID',
-  'VITE_FIREBASE_APP_ID'
-];
-
-const missingEnvVars = requiredEnvVars.filter(
-  (envVar) => !import.meta.env[envVar]
-);
-
-if (missingEnvVars.length > 0) {
-  throw new Error(
-    `Missing required Firebase configuration: ${missingEnvVars.join(', ')}`
-  );
-}
-
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.firebaseapp.com`,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.appspot.com`,
+  apiKey: "AIzaSyCyO4TZBIILJeJcVXBaB1rEWPWBbhb2WA8",
+  authDomain: "prizmpoc.firebaseapp.com",
+  projectId: "prizmpoc",
+  storageBucket: "prizmpoc.appspot.com",
   messagingSenderId: "324482404818",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  appId: "1:324482404818:web:94291fc32b16cca382b80b",
   measurementId: "G-QGEQ4MTXR7"
 };
 
