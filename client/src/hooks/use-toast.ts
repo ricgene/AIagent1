@@ -90,8 +90,6 @@ export const reducer = (state: State, action: Action): State => {
     case "DISMISS_TOAST": {
       const { toastId } = action
 
-      // ! Side effects ! - This could be extracted into a dismissToast() action,
-      // but I'll keep it here for simplicity
       if (toastId) {
         addToRemoveQueue(toastId)
       } else {
@@ -149,6 +147,7 @@ function toast({ ...props }: Toast) {
     })
   const dismiss = () => dispatch({ type: "DISMISS_TOAST", toastId: id })
 
+  // Auto-dismiss toasts immediately
   dispatch({
     type: "ADD_TOAST",
     toast: {
@@ -160,6 +159,9 @@ function toast({ ...props }: Toast) {
       },
     },
   })
+
+  // Start auto-dismiss timer immediately
+  setTimeout(dismiss, TOAST_REMOVE_DELAY / 2)
 
   return {
     id: id,
