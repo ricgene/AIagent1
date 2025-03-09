@@ -1,6 +1,14 @@
-import { pgTable, text, serial, integer, boolean, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+
+// Define the industry matching rules schema
+const industryRuleSchema = z.object({
+  keywords: z.array(z.string()),
+  priority: z.number().min(1).max(10),
+  requirements: z.array(z.string()),
+  specializations: z.array(z.string()),
+});
 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -17,6 +25,8 @@ export const businesses = pgTable("businesses", {
   category: text("category").notNull(),
   location: text("location").notNull(),
   services: text("services").array().notNull(),
+  industryRules: jsonb("industry_rules").notNull(), // New field for industry-specific matching rules
+  matchingScore: integer("matching_score").notNull().default(0), // Base matching score
 });
 
 export const messages = pgTable("messages", {
@@ -35,12 +45,16 @@ export const insertUserSchema = createInsertSchema(users).pick({
   name: true,
 });
 
-export const insertBusinessSchema = createInsertSchema(businesses).pick({
-  description: true,
-  category: true,
-  location: true,
-  services: true,
-});
+export const insertBusinessSchema = createInsertSchema(businesses)
+  .pick({
+    description: true,
+    category: true,
+    location: true,
+    services: true,
+  })
+  .extend({
+    industryRules: industryRuleSchema,
+  });
 
 export const insertMessageSchema = createInsertSchema(messages).pick({
   fromId: true,
@@ -56,3 +70,6 @@ export type InsertMessage = z.infer<typeof insertMessageSchema>;
 export type User = typeof users.$inferSelect;
 export type Business = typeof businesses.$inferSelect;
 export type Message = typeof messages.$inferSelect;
+
+// Export the industry rule type for use in other parts of the application
+export type IndustryRule = z.infer<typeof industryRuleSchema>;

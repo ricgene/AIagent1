@@ -1,5 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-import type { Business } from "@shared/schema";
+import type { Business, IndustryRule } from "@shared/schema";
 
 if (!process.env.ANTHROPIC_API_KEY) {
   throw new Error("ANTHROPIC_API_KEY environment variable is required");
@@ -22,13 +22,30 @@ export async function matchBusinessesToQuery(
       messages: [
         {
           role: "user",
-          content: `You are an expert business matcher. Given this user query: "${query}" and these business profiles: ${JSON.stringify(businesses.map(b => ({
+          content: `As an expert business matcher with industry-specific knowledge, analyze this query: "${query}" against these business profiles: ${JSON.stringify(businesses.map(b => ({
             id: b.id,
             description: b.description,
             category: b.category,
             location: b.location,
             services: b.services,
-          })))}, analyze the semantic relationship between what the user needs and what businesses can provide. Consider capabilities, context, and potential solutions even if the exact terms don't match. For example, if a user needs 'home cooling solution', match with businesses offering 'AC installation' or 'HVAC services'. Return a JSON response in this format: { "matches": [business_ids], "reasoning": "explanation" }`,
+            industryRules: b.industryRules,
+          })))}
+
+Consider the following in your analysis:
+1. Industry-specific keywords and requirements defined in industryRules
+2. Priority levels for different types of services
+3. Specialized capabilities and certifications
+4. Service area and location relevance
+5. Semantic relationship between query needs and business capabilities
+
+Match businesses not just on exact terms, but on capability and context. For example, if a user needs "home cooling solution", match with businesses offering "AC installation" or "HVAC services", giving higher scores to those with specific HVAC certifications in their industryRules.
+
+Return a JSON response with this structure:
+{
+  "matches": [business_ids],
+  "reasoning": "detailed explanation of matches",
+  "industrySpecificFactors": ["list of key industry factors that influenced the matching"]
+}`
         },
       ],
     });
@@ -51,14 +68,20 @@ export async function matchBusinessesToQuery(
 
     const matchedIds = new Set(result.matches);
     console.log("Matched business IDs:", Array.from(matchedIds));
+    console.log("Industry-specific factors:", result.industrySpecificFactors);
 
     // Log the AI reasoning for debugging
     console.log("AI Matching Reasoning:", result.reasoning);
 
+    // Sort businesses by their order in the matches array to maintain priority
     return businesses
       .filter((b) => matchedIds.has(b.id))
       .sort((a, b) => {
-        return result.matches.indexOf(a.id) - result.matches.indexOf(b.id);
+        const aIndex = result.matches.indexOf(a.id);
+        const bIndex = result.matches.indexOf(b.id);
+        if (aIndex === -1) return 1;
+        if (bIndex === -1) return -1;
+        return aIndex - bIndex;
       });
   } catch (error) {
     console.error("Failed to match businesses:", error);

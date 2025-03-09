@@ -10,7 +10,7 @@ import { getAssistantResponse } from "./assistant.js";
 export async function registerRoutes(app: Express) {
   const httpServer = createServer(app);
 
-  // Add some sample business data
+  // Update the sample business creation section
   const sampleBusinesses = [
     {
       username: "techhub",
@@ -32,7 +32,7 @@ export async function registerRoutes(app: Express) {
     },
   ];
 
-  // Create sample users and their business profiles
+  // Update the business creation part
   console.log("Creating sample businesses...");
   for (const business of sampleBusinesses) {
     try {
@@ -58,6 +58,26 @@ export async function registerRoutes(app: Express) {
           : business.name === "HomeFix Pro"
           ? ["Home Repairs", "Renovation", "Plumbing", "Electrical", "HVAC"]
           : ["Primary Care", "Wellness Programs", "Specialized Care", "Telemedicine"],
+        industryRules: business.name === "TechHub Solutions"
+          ? {
+              keywords: ["software", "web", "mobile", "cloud", "IT", "digital", "tech", "application"],
+              priority: 8,
+              requirements: ["Software Development", "Cloud Architecture", "Agile Methodology"],
+              specializations: ["Web Applications", "Mobile Development", "Cloud Solutions"]
+            }
+          : business.name === "HomeFix Pro"
+          ? {
+              keywords: ["repair", "renovation", "maintenance", "install", "fix", "home", "house", "building"],
+              priority: 9,
+              requirements: ["Licensed Contractor", "HVAC Certified", "Electrical License"],
+              specializations: ["Home Renovation", "HVAC Systems", "Electrical Work", "Plumbing"]
+            }
+          : {
+              keywords: ["health", "medical", "wellness", "care", "treatment", "therapy", "diagnosis"],
+              priority: 7,
+              requirements: ["Medical License", "Board Certification", "HIPAA Compliance"],
+              specializations: ["Primary Care", "Preventive Medicine", "Telemedicine"]
+            }
       });
       console.log(`Created business profile for ${business.name}`);
     } catch (error) {
