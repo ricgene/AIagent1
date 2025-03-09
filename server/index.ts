@@ -63,7 +63,22 @@ app.use((req, res, next) => {
   // Set longer timeouts to prevent connection issues
   server.setTimeout(120000); // 2 minutes
   
-  server.listen(PORT, "0.0.0.0", () => {
-    log(`serving on port ${PORT}`);
-  });
+  // Check if port is in use, if so try to kill the process
+  const checkPort = () => {
+    server.listen(PORT, "0.0.0.0", () => {
+      log(`serving on port ${PORT}`);
+    }).on('error', (err: any) => {
+      if (err.code === 'EADDRINUSE') {
+        log(`Port ${PORT} is already in use. Trying again in 5 seconds...`);
+        setTimeout(() => {
+          server.close();
+          checkPort();
+        }, 5000);
+      } else {
+        log(`Error starting server: ${err.message}`);
+      }
+    });
+  };
+  
+  checkPort();
 })();
