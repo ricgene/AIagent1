@@ -71,29 +71,43 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
   // Load available voices and select default
   useEffect(() => {
     const loadVoices = () => {
-      const availableVoices = window.speechSynthesis.getVoices();
-      console.log("Available voices:", availableVoices.map(v => `${v.name} (${v.lang})`));
+      try {
+        const availableVoices = window.speechSynthesis.getVoices();
+        console.log("Available voices:", availableVoices.map(v => `${v.name} (${v.lang})`));
 
-      if (availableVoices.length > 0) {
-        setVoices(availableVoices);
+        if (availableVoices.length > 0) {
+          setVoices(availableVoices);
 
-        // Find a suitable default voice (female US English)
-        const defaultVoice = availableVoices.find(voice =>
-          voice.lang === 'en-US' &&
-          voice.name.toLowerCase().includes('female') &&
-          !voice.name.toLowerCase().includes('german')
-        )?.name || availableVoices[0].name;
+          // Find an English voice that works well on mobile
+          const defaultVoice = availableVoices.find(voice =>
+            voice.lang.startsWith('en') &&
+            (voice.name.includes('Female') || voice.name.includes('Google'))
+          )?.name || availableVoices[0].name;
 
-        console.log("Selected default voice:", defaultVoice);
-        setSelectedVoice(defaultVoice);
+          console.log("Selected voice for synthesis:", defaultVoice);
+          setSelectedVoice(defaultVoice);
+        } else {
+          console.warn("No voices available for speech synthesis");
+        }
+      } catch (error) {
+        console.error("Error loading voices:", error);
       }
     };
 
-    loadVoices(); // Try loading immediately
-    window.speechSynthesis.onvoiceschanged = loadVoices;
+    // Initial load
+    loadVoices();
+
+    // Setup voice changed listener
+    if ('onvoiceschanged' in window.speechSynthesis) {
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+    } else {
+      console.warn("Voice changed event not supported");
+    }
 
     return () => {
-      window.speechSynthesis.onvoiceschanged = null;
+      if ('onvoiceschanged' in window.speechSynthesis) {
+        window.speechSynthesis.onvoiceschanged = null;
+      }
     };
   }, []);
 
@@ -153,37 +167,45 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
     }
   }, [speechSupported, setValue]);
 
-  // Speech synthesis for AI responses
+  // Improved speech synthesis function
   const speakResponse = (text: string) => {
     try {
-      console.log('Speaking response:', text);
+      if (!window.speechSynthesis) {
+        console.error("Speech synthesis not supported");
+        return;
+      }
+
+      console.log("Attempting to speak:", text);
+
       // Cancel any ongoing speech
       window.speechSynthesis.cancel();
 
       const utterance = new SpeechSynthesisUtterance(text);
 
-      // Use the selected voice
+      // Configure utterance
       const voice = voices.find(v => v.name === selectedVoice);
-      console.log('Using voice:', voice?.name);
-
       if (voice) {
         utterance.voice = voice;
-        utterance.lang = 'en-US';  // Force US English
-        utterance.pitch = 1.1;     // Slightly higher pitch for more natural female voice
-        utterance.rate = 1.0;      // Normal speaking rate
-        utterance.volume = 0.9;    // Slightly reduced volume to sound more natural
-
-        // Add event handlers to track speech status
-        utterance.onstart = () => console.log('Started speaking');
-        utterance.onend = () => console.log('Finished speaking');
-        utterance.onerror = (e) => console.error('Speech error:', e);
-
-        window.speechSynthesis.speak(utterance);
+        utterance.volume = 1.0;     // Full volume for mobile
+        utterance.rate = 1.0;       // Normal speed
+        utterance.pitch = 1.0;      // Normal pitch
+        utterance.lang = voice.lang; // Use voice's language
       } else {
-        console.error('Selected voice not found:', selectedVoice);
+        console.warn("Selected voice not found, using default");
       }
+
+      // Add detailed event handlers
+      utterance.onstart = () => console.log("Speech started");
+      utterance.onend = () => console.log("Speech ended");
+      utterance.onerror = (event) => console.error("Speech error:", event);
+      utterance.onpause = () => console.log("Speech paused");
+      utterance.onresume = () => console.log("Speech resumed");
+      utterance.onboundary = (event) => console.log("Speech boundary reached:", event);
+
+      // Start speaking
+      window.speechSynthesis.speak(utterance);
     } catch (error) {
-      console.error('Error in speech synthesis:', error);
+      console.error("Speech synthesis error:", error);
     }
   };
 
