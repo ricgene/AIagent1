@@ -43,14 +43,19 @@ export const logoutUser = async () => {
 // Function to reset password
 export const resetPassword = async (email: string) => {
   try {
-    const fullUrl = `${window.location.protocol}//${window.location.host}/auth`;
-    console.log("Attempting to send password reset email to:", email);
-    console.log("Current domain:", window.location.host);
-    console.log("Full redirect URL:", fullUrl);
+    const domain = window.location.host;
+    const protocol = window.location.protocol;
+    const fullUrl = `${protocol}//${domain}/auth`;
+
+    console.log("Password reset attempt:", {
+      email,
+      domain,
+      fullUrl,
+    });
 
     const actionCodeSettings = {
       url: fullUrl,
-      handleCodeInApp: false
+      handleCodeInApp: true
     };
 
     await sendPasswordResetEmail(auth, email, actionCodeSettings);
@@ -60,7 +65,6 @@ export const resetPassword = async (email: string) => {
     console.error("Error sending password reset email:", error);
     console.error("Error code:", error.code);
     console.error("Error message:", error.message);
-    console.error("Full error object:", JSON.stringify(error, null, 2));
 
     // Add more specific error messages
     const errorMessage = error.code === 'auth/user-not-found'
@@ -77,7 +81,8 @@ export const resetPassword = async (email: string) => {
       ? "Password reset is not enabled for this project. Please contact support."
       : error.message || "Failed to send password reset email. Please try again.";
 
-    const enrichedError = new Error(errorMessage);
+    // Create a custom error with the code property
+    const enrichedError = new Error(errorMessage) as Error & { code?: string };
     enrichedError.code = error.code;
     throw enrichedError;
   }
