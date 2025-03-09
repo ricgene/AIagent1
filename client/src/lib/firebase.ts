@@ -27,8 +27,8 @@ const firebaseConfig = {
 };
 
 console.log('Initializing Firebase with config:', {
-  authDomain: firebaseConfig.authDomain,
   projectId: firebaseConfig.projectId,
+  authDomain: firebaseConfig.authDomain,
   storageBucket: firebaseConfig.storageBucket,
   // Don't log apiKey or appId for security
 });
@@ -39,6 +39,7 @@ try {
   // Initialize Firebase
   const app = initializeApp(firebaseConfig);
   console.log('Firebase app initialized successfully');
+  console.log('Connected to Firebase project:', firebaseConfig.projectId);
 
   // Initialize Firebase Authentication and get a reference to the service
   auth = getAuth(app);
