@@ -1,11 +1,11 @@
 import type { Express } from "express";
 import { createServer } from "http";
 import { WebSocketServer, WebSocket } from "ws";
-import { storage } from "./storage";
-import { insertUserSchema, insertBusinessSchema, insertMessageSchema } from "@shared/schema";
-import { matchBusinessesToQuery } from "./anthropic";
+import { storage } from "./storage.js";
+import { insertUserSchema, insertBusinessSchema, insertMessageSchema } from "@shared/schema.js";
+import { matchBusinessesToQuery } from "./anthropic.js";
 import { ZodError } from "zod";
-import { getAssistantResponse } from "./assistant";
+import { getAssistantResponse } from "./assistant.js";
 
 export async function registerRoutes(app: Express) {
   const httpServer = createServer(app);
@@ -67,7 +67,7 @@ export async function registerRoutes(app: Express) {
 
   // WebSocket setup for real-time messaging
   const wss = new WebSocketServer({ server: httpServer, path: "/ws" });
-  
+
   // Ensure WebSocket server shuts down cleanly
   httpServer.on('close', () => {
     wss.clients.forEach(client => {
@@ -80,7 +80,7 @@ export async function registerRoutes(app: Express) {
 
   wss.on("connection", (ws) => {
     console.log("WebSocket connection established");
-    
+
     ws.on("message", (data) => {
       try {
         const msg = JSON.parse(data.toString());
@@ -92,11 +92,11 @@ export async function registerRoutes(app: Express) {
         console.error("WebSocket message error:", e);
       }
     });
-    
+
     ws.on("error", (error) => {
       console.error("WebSocket error:", error);
     });
-    
+
     ws.on("close", (code, reason) => {
       console.log(`WebSocket closed with code ${code}. Reason: ${reason}`);
       // Remove client from the map when disconnected
@@ -108,7 +108,7 @@ export async function registerRoutes(app: Express) {
         }
       }
     });
-    
+
     // Send a ping every 30 seconds to keep the connection alive
     const pingInterval = setInterval(() => {
       if (ws.readyState === WebSocket.OPEN) {

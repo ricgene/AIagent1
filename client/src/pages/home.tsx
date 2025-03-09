@@ -154,7 +154,7 @@ export default function Home() {
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message || "Failed to send reset email. Please try again.",
+        description: `Reset failed: ${error.message}. Error code: ${error.code || 'unknown'}`,
       });
     }
   };

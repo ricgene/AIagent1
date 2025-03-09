@@ -44,16 +44,24 @@ export const logoutUser = async () => {
 export const resetPassword = async (email: string) => {
   try {
     console.log("Attempting to send password reset email to:", email);
+    const fullUrl = `${window.location.protocol}//${window.location.host}/auth`;
+    console.log("Reset password redirect URL:", fullUrl);
+
     const actionCodeSettings = {
-      url: `${window.location.protocol}//${window.location.host}/auth`, // Full absolute URL
-      handleCodeInApp: false // Explicitly set to false for email link handling
+      url: fullUrl,
+      handleCodeInApp: false
     };
     console.log("Reset password settings:", actionCodeSettings);
+
     await sendPasswordResetEmail(auth, email, actionCodeSettings);
     console.log("Password reset email sent successfully");
     return true;
   } catch (error: any) {
     console.error("Error sending password reset email:", error);
+    console.error("Error code:", error.code);
+    console.error("Error message:", error.message);
+    console.error("Full error object:", JSON.stringify(error, null, 2));
+
     // Add more specific error messages
     const errorMessage = error.code === 'auth/user-not-found'
       ? "No account found with this email address."
@@ -61,8 +69,17 @@ export const resetPassword = async (email: string) => {
       ? "Please enter a valid email address."
       : error.code === 'auth/too-many-requests'
       ? "Too many password reset attempts. Please try again later."
-      : "Failed to send password reset email. Please try again.";
-    throw new Error(errorMessage);
+      : error.code === 'auth/invalid-continue-uri'
+      ? "The continue URL provided is invalid. Please contact support."
+      : error.code === 'auth/unauthorized-continue-uri'
+      ? "The continue URL domain is not authorized. Please contact support."
+      : error.code === 'auth/operation-not-allowed'
+      ? "Password reset is not enabled for this project. Please contact support."
+      : error.message || "Failed to send password reset email. Please try again.";
+
+    const enrichedError = new Error(errorMessage);
+    enrichedError.code = error.code;
+    throw enrichedError;
   }
 };
 

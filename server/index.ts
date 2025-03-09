@@ -1,18 +1,19 @@
-import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
+import express, { Request, Response, NextFunction } from "express";
+import { registerRoutes } from "./routes.js";
+import { setupVite, serveStatic, log } from "./vite.js";
+import { createServer } from "net";
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-app.use((req, res, next) => {
+app.use((req: Request, res: Response, next: NextFunction) => {
   const start = Date.now();
   const path = req.path;
   let capturedJsonResponse: Record<string, any> | undefined = undefined;
 
   const originalResJson = res.json;
-  res.json = function (bodyJson, ...args) {
+  res.json = function (bodyJson: any, ...args: any[]) {
     capturedJsonResponse = bodyJson;
     return originalResJson.apply(res, [bodyJson, ...args]);
   };
@@ -47,9 +48,6 @@ app.use((req, res, next) => {
     throw err;
   });
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
   if (app.get("env") === "development") {
     await setupVite(app, server);
   } else {
@@ -58,10 +56,10 @@ app.use((req, res, next) => {
 
   // Try ports in sequence until we find an available one
   const PORTS = [3000, 4000, 8080, 8000, 3001];
-  
+
   // Set longer timeouts to prevent connection issues
   server.setTimeout(120000); // 2 minutes
-  
+
   // Clean up function to handle proper shutdown
   const cleanUp = () => {
     log("Server shutting down...");
@@ -70,11 +68,11 @@ app.use((req, res, next) => {
       process.exit(0);
     });
   };
-  
+
   // Register cleanup handlers
   process.on("SIGINT", cleanUp);
   process.on("SIGTERM", cleanUp);
-  
+
   // Try ports sequentially until we find one that works
   const tryPorts = (index = 0) => {
     if (index >= PORTS.length) {
@@ -84,10 +82,9 @@ app.use((req, res, next) => {
     }
 
     const PORT = PORTS[index];
-    
+
     // First check if the port is in use before trying to listen
-    const net = require('net');
-    const tester = net.createServer()
+    const tester = createServer()
       .once('error', (err: any) => {
         if (err.code === 'EADDRINUSE') {
           log(`Port ${PORT} is already in use. Trying next port...`);
@@ -110,6 +107,6 @@ app.use((req, res, next) => {
       })
       .listen(PORT, "0.0.0.0");
   };
-  
+
   tryPorts();
 })();
