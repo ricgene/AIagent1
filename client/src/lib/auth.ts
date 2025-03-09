@@ -43,12 +43,21 @@ export const logoutUser = async () => {
 // Function to reset password
 export const resetPassword = async (email: string) => {
   try {
+    console.log("Attempting to send password reset email to:", email);
     await sendPasswordResetEmail(auth, email);
     console.log("Password reset email sent successfully");
     return true;
   } catch (error: any) {
-    console.error("Error sending password reset email:", error.message);
-    throw error;
+    console.error("Error sending password reset email:", error);
+    // Add more specific error messages
+    const errorMessage = error.code === 'auth/user-not-found'
+      ? "No account found with this email address."
+      : error.code === 'auth/invalid-email'
+      ? "Please enter a valid email address."
+      : error.code === 'auth/too-many-requests'
+      ? "Too many password reset attempts. Please try again later."
+      : "Failed to send password reset email. Please try again.";
+    throw new Error(errorMessage);
   }
 };
 
