@@ -140,7 +140,10 @@ export default function Home() {
 
   const handleResetPassword = async (email: string) => {
     try {
+      console.log("Starting password reset process for email:", email);
+      console.log("Current URL origin:", window.location.origin);
       await resetPassword(email);
+      console.log("Password reset initiated successfully");
       toast({
         title: "Success",
         description: "Password reset email sent. Please check your inbox.",

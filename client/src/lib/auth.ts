@@ -44,7 +44,12 @@ export const logoutUser = async () => {
 export const resetPassword = async (email: string) => {
   try {
     console.log("Attempting to send password reset email to:", email);
-    await sendPasswordResetEmail(auth, email);
+    const actionCodeSettings = {
+      url: `${window.location.protocol}//${window.location.host}/auth`, // Full absolute URL
+      handleCodeInApp: false // Explicitly set to false for email link handling
+    };
+    console.log("Reset password settings:", actionCodeSettings);
+    await sendPasswordResetEmail(auth, email, actionCodeSettings);
     console.log("Password reset email sent successfully");
     return true;
   } catch (error: any) {
