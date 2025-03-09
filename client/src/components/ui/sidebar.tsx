@@ -20,7 +20,7 @@ import {
 const SIDEBAR_COOKIE_NAME = "sidebar:state"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
 const SIDEBAR_WIDTH = "16rem"
-const SIDEBAR_WIDTH_MOBILE = "10rem" // Reduced from 14rem to 10rem for better mobile experience
+const SIDEBAR_WIDTH_MOBILE = "8rem" // Reduced width for better mobile experience
 const SIDEBAR_WIDTH_ICON = "3rem"
 const SIDEBAR_KEYBOARD_SHORTCUT = "b"
 
@@ -206,7 +206,7 @@ const Sidebar = React.forwardRef<
             side={side}
           >
             <div className="flex h-full w-full flex-col bg-transparent">
-              <div onClick={() => setOpenMobile(false)}>
+              <div className="text-white" onClick={() => setOpenMobile(false)}>
                 {children}
               </div>
             </div>
@@ -504,22 +504,27 @@ SidebarMenu.displayName = "SidebarMenu"
 const SidebarMenuItem = React.forwardRef<
   HTMLLIElement,
   React.ComponentProps<"li">
->(({ className, ...props }, ref) => {
+>(({ className, children, ...props }, ref) => {
   const { setOpenMobile, isMobile } = useSidebar();
+
+  const handleClick = React.useCallback(() => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  }, [isMobile, setOpenMobile]);
+
   return (
     <li
       ref={ref}
       data-sidebar="menu-item"
-      className={cn("group/menu-item relative", className)}
-      onClick={() => {
-        if (isMobile) {
-          setOpenMobile(false);
-        }
-      }}
+      className={cn("group/menu-item relative text-white", className)}
+      onClick={handleClick}
       {...props}
-    />
+    >
+      {children}
+    </li>
   );
-})
+});
 SidebarMenuItem.displayName = "SidebarMenuItem"
 
 const sidebarMenuButtonVariants = cva(
