@@ -5,13 +5,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Send, Mic, MicOff, VolumeX, Volume2 } from "lucide-react";
 import { useForm } from "react-hook-form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { apiRequest } from "@/lib/queryClient";
 import type { Message } from "@shared/schema";
 
@@ -28,8 +21,6 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
   const [isListening, setIsListening] = useState(false);
   const [speechSupported] = useState('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
   const recognitionRef = useRef<any>(null);
-  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
-  const [selectedVoice, setSelectedVoice] = useState<string | null>(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const queryKey = [`/api/messages/ai/${userId}`];
@@ -44,25 +35,10 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
           await window.speechSynthesis.speak(new SpeechSynthesisUtterance(''));
         }
 
+        // Set up voice
         const loadVoices = () => {
           const availableVoices = window.speechSynthesis.getVoices();
-          console.log("Available voices:", availableVoices.map(v => `${v.name} (${v.lang})`));
-
-          if (availableVoices.length > 0) {
-            setVoices(availableVoices);
-
-            // Prioritize mobile-friendly voices
-            const defaultVoice = availableVoices.find(voice =>
-              voice.lang.startsWith('en') &&
-              (voice.name.includes('Female') || 
-               voice.name.includes('Google') ||
-               voice.name.includes('iPhone') ||
-               voice.name.includes('Android'))
-            )?.name || availableVoices[0].name;
-
-            console.log("Selected voice for synthesis:", defaultVoice);
-            setSelectedVoice(defaultVoice);
-          } else {
+          if (availableVoices.length === 0) {
             console.warn("No voices available for speech synthesis");
           }
         };
@@ -105,17 +81,12 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
 
       const utterance = new SpeechSynthesisUtterance(text);
 
-      // Configure utterance
-      const voice = voices.find(v => v.name === selectedVoice);
-      if (voice) {
-        utterance.voice = voice;
-        utterance.volume = 1.0;     // Full volume for mobile
-        utterance.rate = 1.0;       // Normal speed
-        utterance.pitch = 1.0;      // Normal pitch
-        utterance.lang = voice.lang; // Use voice's language
-      } else {
-        console.warn("Selected voice not found, using default");
-      }
+      // Configure utterance with fixed voice
+      utterance.voice = window.speechSynthesis.getVoices().find(v => v.name === "en-US-Chirp-HD-F") || null;
+      utterance.volume = 1.0;     // Full volume for mobile
+      utterance.rate = 1.0;       // Normal speed
+      utterance.pitch = 1.0;      // Normal pitch
+      utterance.lang = 'en-US';   // Use English US
 
       // Add detailed event handlers
       utterance.onstart = () => {
@@ -185,57 +156,6 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
     queryKey,
   });
 
-
-  // Load available voices and select default
-  useEffect(() => {
-    const loadVoices = () => {
-      try {
-        const availableVoices = window.speechSynthesis.getVoices();
-        console.log("Available voices:", availableVoices.map(v => `${v.name} (${v.lang})`));
-
-        if (availableVoices.length > 0) {
-          setVoices(availableVoices);
-
-          // Find an English voice that works well on mobile
-          const defaultVoice = availableVoices.find(voice =>
-            voice.lang.startsWith('en') &&
-            (voice.name.includes('Female') || voice.name.includes('Google'))
-          )?.name || availableVoices[0].name;
-
-          console.log("Selected voice for synthesis:", defaultVoice);
-          setSelectedVoice(defaultVoice);
-        } else {
-          console.warn("No voices available for speech synthesis");
-        }
-      } catch (error) {
-        console.error("Error loading voices:", error);
-      }
-    };
-
-    // Initial load
-    loadVoices();
-
-    // Setup voice changed listener
-    if ('onvoiceschanged' in window.speechSynthesis) {
-      window.speechSynthesis.onvoiceschanged = loadVoices;
-    } else {
-      console.warn("Voice changed event not supported");
-    }
-    return () => {
-      if ('onvoiceschanged' in window.speechSynthesis) {
-        window.speechSynthesis.onvoiceschanged = null;
-      }
-    };
-  }, []);
-
-  // Auto-resize textarea
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
-    }
-  }, [watch("content"), transcriptText]);
-
   // Initialize speech recognition
   useEffect(() => {
     if (speechSupported) {
@@ -294,6 +214,14 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
     }
   };
 
+  // Auto-resize textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
+    }
+  }, [watch("content"), transcriptText]);
+
   // Scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -302,27 +230,7 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
   return (
     <div className="flex flex-col h-[600px]">
       <div className="border-b p-4">
-        <div className="flex items-center gap-2 justify-between">
-          <div className="flex items-center gap-2">
-            <label className="text-sm font-medium">Assistant Voice:</label>
-            <Select
-              value={selectedVoice || undefined}
-              onValueChange={setSelectedVoice}
-            >
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Select a voice" />
-              </SelectTrigger>
-              <SelectContent>
-                {voices
-                  .filter(voice => voice.lang.startsWith('en'))
-                  .map((voice) => (
-                    <SelectItem key={voice.name} value={voice.name}>
-                      {voice.name}
-                    </SelectItem>
-                  ))}
-              </SelectContent>
-            </Select>
-          </div>
+        <div className="flex items-center gap-2 justify-end">
           <Button
             variant="ghost"
             size="icon"
