@@ -1,5 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, setPersistence, browserLocalPersistence } from "firebase/auth";
+import { getAnalytics } from "firebase/analytics";
 
 // Verify that all required environment variables are present
 const requiredEnvVars = [
@@ -23,7 +24,9 @@ const firebaseConfig = {
   authDomain: `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.firebaseapp.com`,
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
   storageBucket: `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.appspot.com`,
+  messagingSenderId: "324482404818",
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: "G-QGEQ4MTXR7"
 };
 
 console.log('Current Firebase Project ID:', firebaseConfig.projectId);
@@ -35,6 +38,7 @@ console.log('Firebase Configuration:', {
 });
 
 let auth: any; // Declare auth outside the try block
+let analytics: any;
 
 try {
   // Initialize Firebase
@@ -44,7 +48,8 @@ try {
 
   // Initialize Firebase Authentication and get a reference to the service
   auth = getAuth(app);
-  console.log('Firebase auth initialized successfully');
+  analytics = getAnalytics(app);
+  console.log('Firebase auth and analytics initialized successfully');
 
   // Enable persistence to remember user between page reloads
   setPersistence(auth, browserLocalPersistence)
@@ -60,4 +65,4 @@ try {
 }
 
 // Export the auth instance at the module level
-export { auth };
+export { auth, analytics };
