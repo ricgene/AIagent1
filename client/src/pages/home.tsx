@@ -138,7 +138,7 @@ export default function Home() {
 
   return (
     <div className="container max-w-lg mx-auto px-4 pt-8">
-      <Card className="mt-8">
+      <Card className="mt-8 bg-white/90">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl md:text-3xl">AIConnect</CardTitle>
           <CardDescription>
@@ -146,7 +146,7 @@ export default function Home() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="login">
+          <Tabs defaultValue="login" className="text-foreground">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="login">Login</TabsTrigger>
               <TabsTrigger value="register">Register</TabsTrigger>
