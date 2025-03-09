@@ -20,16 +20,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
-import { auth } from "@/lib/firebase";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
+import { loginUser, registerUser } from "@/lib/auth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState, useEffect } from 'react';
-
-// Assume isFirebaseInitialized is defined elsewhere, perhaps in lib/firebase or a separate utility file.
-const isFirebaseInitialized = () => {
-  //Replace with your actual Firebase initialization check.
-  return true; //For testing purposes
-};
+import { isFirebaseInitialized } from "@/lib/firebase";
 
 const authSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -82,18 +76,15 @@ export default function Home() {
       }
 
       console.log("Attempting login with email:", data.email);
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        data.email,
-        data.password
-      );
-      console.log("Login successful:", userCredential.user);
+      await loginUser(data.email, data.password);
+      console.log("Login successful");
 
       toast({
         title: "Success",
         description: "Logged in successfully",
       });
 
+      // Navigate to messages page after successful login
       setTimeout(() => setLocation("/messages"), 500);
 
     } catch (error: any) {
@@ -106,10 +97,6 @@ export default function Home() {
         ? "Invalid email format. Please enter a valid email address."
         : error.code === 'auth/invalid-credential'
         ? "Invalid credentials. Please check your email and password."
-        : error.code === 'auth/operation-not-allowed'
-        ? "Email/Password sign-in is not enabled. Please contact support."
-        : error.code === 'auth/auth-domain-config-required'
-        ? "This domain is not authorized for Firebase Authentication. Please contact support."
         : error.message || "Login failed. Please try again.";
 
       toast({
@@ -123,12 +110,8 @@ export default function Home() {
   const onRegister = async (data: AuthForm) => {
     try {
       console.log("Attempting registration with email:", data.email);
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        data.email,
-        data.password
-      );
-      console.log("Registration successful:", userCredential.user);
+      await registerUser(data.email, data.password);
+      console.log("Registration successful");
 
       toast({
         title: "Success",
@@ -142,12 +125,8 @@ export default function Home() {
         ? "An account with this email already exists."
         : error.code === 'auth/invalid-email'
         ? "Invalid email format. Please enter a valid email address."
-        : error.code === 'auth/operation-not-allowed'
-        ? "Email/Password registration is not enabled. Please contact support."
         : error.code === 'auth/weak-password'
         ? "Password is too weak. Please use at least 6 characters."
-        : error.code === 'auth/auth-domain-config-required'
-        ? "This domain is not authorized for Firebase Authentication. Please contact support."
         : error.message || "Registration failed. Please try again.";
 
       toast({
