@@ -1,7 +1,6 @@
 import express, { Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes.js";
 import { setupVite, serveStatic, log } from "./vite.js";
-import { createServer } from "net";
 
 const app = express();
 app.use(express.json());
@@ -13,9 +12,9 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   let capturedJsonResponse: Record<string, any> | undefined = undefined;
 
   const originalResJson = res.json;
-  res.json = function (bodyJson: any, ...args: any[]) {
+  res.json = function (bodyJson: any) {
     capturedJsonResponse = bodyJson;
-    return originalResJson.apply(res, [bodyJson, ...args]);
+    return originalResJson.call(res, bodyJson);
   };
 
   res.on("finish", () => {
@@ -54,9 +53,6 @@ app.use((req: Request, res: Response, next: NextFunction) => {
     serveStatic(app);
   }
 
-  // Try ports in sequence until we find an available one
-  const PORTS = [3000, 4000, 8080, 8000, 3001];
-
   // Set longer timeouts to prevent connection issues
   server.setTimeout(120000); // 2 minutes
 
@@ -73,40 +69,8 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   process.on("SIGINT", cleanUp);
   process.on("SIGTERM", cleanUp);
 
-  // Try ports sequentially until we find one that works
-  const tryPorts = (index = 0) => {
-    if (index >= PORTS.length) {
-      log("No available ports found. Please free up a port and try again.");
-      process.exit(1);
-      return;
-    }
-
-    const PORT = PORTS[index];
-
-    // First check if the port is in use before trying to listen
-    const tester = createServer()
-      .once('error', (err: any) => {
-        if (err.code === 'EADDRINUSE') {
-          log(`Port ${PORT} is already in use. Trying next port...`);
-          tryPorts(index + 1);
-        } else {
-          log(`Error checking port ${PORT}: ${err.message}`);
-          tryPorts(index + 1);
-        }
-      })
-      .once('listening', () => {
-        tester.close();
-        // Port is available, now try to start the actual server
-        server.listen(PORT, "0.0.0.0", () => {
-          log(`Server running on port ${PORT}`);
-        }).on('error', (err: any) => {
-          log(`Error starting server on port ${PORT}: ${err.message}`);
-          server.close();
-          tryPorts(index + 1);
-        });
-      })
-      .listen(PORT, "0.0.0.0");
-  };
-
-  tryPorts();
+  // Listen on port 5000 as required by Replit
+  server.listen(5000, "0.0.0.0", () => {
+    log("Server running on port 5000");
+  });
 })();
