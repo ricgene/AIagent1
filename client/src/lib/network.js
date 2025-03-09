@@ -1,0 +1,1 @@
+const wsUrl = `wss://${window.location.host}`;
