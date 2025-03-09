@@ -21,7 +21,10 @@ export const registerUser = async (email: string, password: string) => {
 // Function to sign in existing user
 export const loginUser = async (email: string, password: string) => {
   try {
+    console.log("Attempting login with email:", email);
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    console.log("Login successful");
+    // Here we're letting the success message auto-dismiss quickly
     return userCredential.user;
   } catch (error: any) {
     console.error("Error logging in:", error.message);
