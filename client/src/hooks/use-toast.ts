@@ -6,7 +6,7 @@ import type {
 } from "@/components/ui/toast"
 
 const TOAST_LIMIT = 1
-const TOAST_REMOVE_DELAY = 700 // Changed from 2000 to 700ms (0.7 seconds) for faster auto-dismiss
+const TOAST_REMOVE_DELAY = 350 // Changed from 700 to 350ms (0.35 seconds) for even faster auto-dismiss
 
 type ToasterToast = ToastProps & {
   id: string
