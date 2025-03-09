@@ -56,9 +56,9 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on port 5000
+  // Serve the app on port 3000 instead of 5000 to avoid conflicts
   // this serves both the API and the client
-  const PORT = 5000;
+  const PORT = 3000;
   
   // Set longer timeouts to prevent connection issues
   server.setTimeout(120000); // 2 minutes
