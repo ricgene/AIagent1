@@ -69,7 +69,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   process.on("SIGINT", cleanUp);
   process.on("SIGTERM", cleanUp);
 
-  // Listen on port 5000 as required by Replit
+  // ALWAYS serve the app on port 5000
   server.listen(5000, "0.0.0.0", () => {
     log("Server running on port 5000");
   });
