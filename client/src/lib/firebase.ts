@@ -26,7 +26,8 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-console.log('Initializing Firebase with config:', {
+console.log('Current Firebase Project ID:', firebaseConfig.projectId);
+console.log('Firebase Configuration:', {
   projectId: firebaseConfig.projectId,
   authDomain: firebaseConfig.authDomain,
   storageBucket: firebaseConfig.storageBucket,
