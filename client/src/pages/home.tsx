@@ -20,7 +20,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
-import { loginUser, registerUser } from "@/lib/auth";
+import { loginUser, registerUser, resetPassword } from "@/lib/auth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState, useEffect } from 'react';
 import { isFirebaseInitialized } from "@/lib/firebase";
@@ -36,6 +36,7 @@ export default function Home() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [isInitializing, setIsInitializing] = useState(true);
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
 
   useEffect(() => {
     const checkInitialization = () => {
@@ -137,6 +138,24 @@ export default function Home() {
     }
   };
 
+  const handleResetPassword = async (email: string) => {
+    try {
+      await resetPassword(email);
+      toast({
+        title: "Success",
+        description: "Password reset email sent. Please check your inbox.",
+      });
+      setIsResettingPassword(false);
+    } catch (error: any) {
+      console.error("Reset password error:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to send reset email. Please try again.",
+      });
+    }
+  };
+
   if (isInitializing) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-primary">
@@ -207,6 +226,25 @@ export default function Home() {
                   />
                   <Button type="submit" variant="default" className="w-full bg-primary hover:bg-primary/90 text-white">
                     Login
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="w-full text-primary hover:text-primary/90"
+                    onClick={() => {
+                      const email = loginForm.getValues("email");
+                      if (email) {
+                        handleResetPassword(email);
+                      } else {
+                        toast({
+                          variant: "destructive",
+                          title: "Error",
+                          description: "Please enter your email address first.",
+                        });
+                      }
+                    }}
+                  >
+                    Forgot Password?
                   </Button>
                 </form>
               </Form>
