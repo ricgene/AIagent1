@@ -43,15 +43,15 @@ export const logoutUser = async () => {
 // Function to reset password
 export const resetPassword = async (email: string) => {
   try {
-    console.log("Attempting to send password reset email to:", email);
     const fullUrl = `${window.location.protocol}//${window.location.host}/auth`;
-    console.log("Reset password redirect URL:", fullUrl);
+    console.log("Attempting to send password reset email to:", email);
+    console.log("Current domain:", window.location.host);
+    console.log("Full redirect URL:", fullUrl);
 
     const actionCodeSettings = {
       url: fullUrl,
       handleCodeInApp: false
     };
-    console.log("Reset password settings:", actionCodeSettings);
 
     await sendPasswordResetEmail(auth, email, actionCodeSettings);
     console.log("Password reset email sent successfully");
