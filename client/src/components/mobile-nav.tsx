@@ -11,6 +11,7 @@ export function MobileNav() {
           variant="ghost" 
           size="icon" 
           className="fixed top-4 left-4 block md:hidden" 
+          aria-label="Menu"
         >
           <Menu className="h-5 w-5" />
           <span className="sr-only">Toggle menu</span>

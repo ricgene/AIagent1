@@ -69,7 +69,7 @@ export default function Home() {
       setLocation("/search");
     } catch (error: any) {
       console.error("Login error:", error);
-      const errorMessage = error.code === 'auth/user-not-found' 
+      const errorMessage = error.code === 'auth/user-not-found'
         ? "No account found with this email. Please check your email or sign up."
         : error.code === 'auth/wrong-password'
         ? "Incorrect password. Please try again."
@@ -137,10 +137,10 @@ export default function Home() {
   };
 
   return (
-    <div className="container max-w-lg mx-auto px-4">
+    <div className="container max-w-lg mx-auto px-4 pt-8">
       <Card className="mt-8">
-        <CardHeader>
-          <CardTitle>Welcome to AIConnect</CardTitle>
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl md:text-3xl hidden md:block">AIConnect</CardTitle>
           <CardDescription className="text-primary">
             Connect with businesses using AI-powered matching
           </CardDescription>
