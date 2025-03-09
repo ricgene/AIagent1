@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Send, Mic, MicOff } from "lucide-react";
+import { Send, Mic, MicOff, VolumeX, Volume2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import {
   Select,
@@ -30,9 +30,126 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
   const recognitionRef = useRef<any>(null);
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [selectedVoice, setSelectedVoice] = useState<string | null>(null);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
   const queryKey = [`/api/messages/ai/${userId}`];
+  const [isMobile] = useState(window.navigator.userAgent.match(/Mobile|Android|iOS|iPhone|iPad|iPod/i));
 
-  // Define sendMessage mutation first
+  // Initialize speech synthesis
+  useEffect(() => {
+    const initVoices = async () => {
+      try {
+        // Some mobile browsers need a user interaction to initialize speech
+        if (isMobile) {
+          await window.speechSynthesis.speak(new SpeechSynthesisUtterance(''));
+        }
+
+        const loadVoices = () => {
+          const availableVoices = window.speechSynthesis.getVoices();
+          console.log("Available voices:", availableVoices.map(v => `${v.name} (${v.lang})`));
+
+          if (availableVoices.length > 0) {
+            setVoices(availableVoices);
+
+            // Prioritize mobile-friendly voices
+            const defaultVoice = availableVoices.find(voice =>
+              voice.lang.startsWith('en') &&
+              (voice.name.includes('Female') || 
+               voice.name.includes('Google') ||
+               voice.name.includes('iPhone') ||
+               voice.name.includes('Android'))
+            )?.name || availableVoices[0].name;
+
+            console.log("Selected voice for synthesis:", defaultVoice);
+            setSelectedVoice(defaultVoice);
+          } else {
+            console.warn("No voices available for speech synthesis");
+          }
+        };
+
+        // Initial load
+        loadVoices();
+
+        // Setup voice changed listener
+        if ('onvoiceschanged' in window.speechSynthesis) {
+          window.speechSynthesis.onvoiceschanged = loadVoices;
+        }
+
+        return () => {
+          if ('onvoiceschanged' in window.speechSynthesis) {
+            window.speechSynthesis.onvoiceschanged = null;
+          }
+        };
+      } catch (error) {
+        console.error("Error initializing speech synthesis:", error);
+      }
+    };
+
+    initVoices();
+  }, [isMobile]);
+
+  // Improved speech synthesis function
+  const speakResponse = async (text: string) => {
+    if (isMuted) return;
+
+    try {
+      if (!window.speechSynthesis) {
+        console.error("Speech synthesis not supported");
+        return;
+      }
+
+      console.log("Attempting to speak:", text);
+
+      // Cancel any ongoing speech
+      window.speechSynthesis.cancel();
+
+      const utterance = new SpeechSynthesisUtterance(text);
+
+      // Configure utterance
+      const voice = voices.find(v => v.name === selectedVoice);
+      if (voice) {
+        utterance.voice = voice;
+        utterance.volume = 1.0;     // Full volume for mobile
+        utterance.rate = 1.0;       // Normal speed
+        utterance.pitch = 1.0;      // Normal pitch
+        utterance.lang = voice.lang; // Use voice's language
+      } else {
+        console.warn("Selected voice not found, using default");
+      }
+
+      // Add detailed event handlers
+      utterance.onstart = () => {
+        console.log("Speech started");
+        setIsSpeaking(true);
+      };
+      utterance.onend = () => {
+        console.log("Speech ended");
+        setIsSpeaking(false);
+      };
+      utterance.onerror = (event) => {
+        console.error("Speech error:", event);
+        setIsSpeaking(false);
+      };
+
+      // For mobile browsers, try to unlock audio context
+      if (isMobile) {
+        try {
+          const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+          const audioContext = new AudioContext();
+          await audioContext.resume();
+        } catch (error) {
+          console.warn("Could not initialize AudioContext:", error);
+        }
+      }
+
+      // Start speaking
+      window.speechSynthesis.speak(utterance);
+    } catch (error) {
+      console.error("Speech synthesis error:", error);
+      setIsSpeaking(false);
+    }
+  };
+
   const sendMessage = useMutation({
     mutationFn: async (content: string) => {
       console.log("Sending message:", content);
@@ -67,6 +184,7 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
   const { data: messages = [] } = useQuery<Message[]>({
     queryKey,
   });
+
 
   // Load available voices and select default
   useEffect(() => {
@@ -103,7 +221,6 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
     } else {
       console.warn("Voice changed event not supported");
     }
-
     return () => {
       if ('onvoiceschanged' in window.speechSynthesis) {
         window.speechSynthesis.onvoiceschanged = null;
@@ -167,48 +284,6 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
     }
   }, [speechSupported, setValue]);
 
-  // Improved speech synthesis function
-  const speakResponse = (text: string) => {
-    try {
-      if (!window.speechSynthesis) {
-        console.error("Speech synthesis not supported");
-        return;
-      }
-
-      console.log("Attempting to speak:", text);
-
-      // Cancel any ongoing speech
-      window.speechSynthesis.cancel();
-
-      const utterance = new SpeechSynthesisUtterance(text);
-
-      // Configure utterance
-      const voice = voices.find(v => v.name === selectedVoice);
-      if (voice) {
-        utterance.voice = voice;
-        utterance.volume = 1.0;     // Full volume for mobile
-        utterance.rate = 1.0;       // Normal speed
-        utterance.pitch = 1.0;      // Normal pitch
-        utterance.lang = voice.lang; // Use voice's language
-      } else {
-        console.warn("Selected voice not found, using default");
-      }
-
-      // Add detailed event handlers
-      utterance.onstart = () => console.log("Speech started");
-      utterance.onend = () => console.log("Speech ended");
-      utterance.onerror = (event) => console.error("Speech error:", event);
-      utterance.onpause = () => console.log("Speech paused");
-      utterance.onresume = () => console.log("Speech resumed");
-      utterance.onboundary = (event) => console.log("Speech boundary reached:", event);
-
-      // Start speaking
-      window.speechSynthesis.speak(utterance);
-    } catch (error) {
-      console.error("Speech synthesis error:", error);
-    }
-  };
-
   const toggleListening = () => {
     if (!isListening) {
       recognitionRef.current?.start();
@@ -227,25 +302,39 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
   return (
     <div className="flex flex-col h-[600px]">
       <div className="border-b p-4">
-        <div className="flex items-center gap-2">
-          <label className="text-sm font-medium">Assistant Voice:</label>
-          <Select
-            value={selectedVoice || undefined}
-            onValueChange={setSelectedVoice}
+        <div className="flex items-center gap-2 justify-between">
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium">Assistant Voice:</label>
+            <Select
+              value={selectedVoice || undefined}
+              onValueChange={setSelectedVoice}
+            >
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Select a voice" />
+              </SelectTrigger>
+              <SelectContent>
+                {voices
+                  .filter(voice => voice.lang.startsWith('en'))
+                  .map((voice) => (
+                    <SelectItem key={voice.name} value={voice.name}>
+                      {voice.name}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsMuted(!isMuted)}
+            className="ml-2"
           >
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Select a voice" />
-            </SelectTrigger>
-            <SelectContent>
-              {voices
-                .filter(voice => voice.lang === 'en-US')
-                .map((voice) => (
-                  <SelectItem key={voice.name} value={voice.name}>
-                    {voice.name}
-                  </SelectItem>
-                ))}
-            </SelectContent>
-          </Select>
+            {isMuted ? (
+              <VolumeX className="h-4 w-4" />
+            ) : (
+              <Volume2 className="h-4 w-4" />
+            )}
+          </Button>
         </div>
       </div>
       <div className="flex-1 overflow-y-auto p-4 flex flex-col-reverse">
