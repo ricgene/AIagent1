@@ -20,7 +20,7 @@ import {
 const SIDEBAR_COOKIE_NAME = "sidebar:state"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
 const SIDEBAR_WIDTH = "16rem"
-const SIDEBAR_WIDTH_MOBILE = "8rem" // Reduced width for better mobile experience
+const SIDEBAR_WIDTH_MOBILE = "6rem" // Reduced width for mobile
 const SIDEBAR_WIDTH_ICON = "3rem"
 const SIDEBAR_KEYBOARD_SHORTCUT = "b"
 
@@ -205,7 +205,7 @@ const Sidebar = React.forwardRef<
             }
             side={side}
           >
-            <div className="flex h-full w-full flex-col bg-transparent">
+            <div className="flex h-full w-full flex-col bg-black/30">
               <div className="text-white" onClick={() => setOpenMobile(false)}>
                 {children}
               </div>
@@ -509,7 +509,7 @@ const SidebarMenuItem = React.forwardRef<
 
   const handleClick = React.useCallback(() => {
     if (isMobile) {
-      setOpenMobile(false);
+      setTimeout(() => setOpenMobile(false), 150); // Add slight delay for better UX
     }
   }, [isMobile, setOpenMobile]);
 
@@ -517,7 +517,7 @@ const SidebarMenuItem = React.forwardRef<
     <li
       ref={ref}
       data-sidebar="menu-item"
-      className={cn("group/menu-item relative text-white", className)}
+      className={cn("group/menu-item relative text-white cursor-pointer", className)}
       onClick={handleClick}
       {...props}
     >
