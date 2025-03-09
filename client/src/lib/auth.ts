@@ -58,6 +58,8 @@ export const resetPassword = async (email: string) => {
       handleCodeInApp: true
     };
 
+    console.log("Action code settings:", actionCodeSettings);
+
     await sendPasswordResetEmail(auth, email, actionCodeSettings);
     console.log("Password reset email sent successfully");
     return true;
