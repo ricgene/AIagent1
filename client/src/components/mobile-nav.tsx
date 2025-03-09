@@ -10,8 +10,7 @@ export function MobileNav() {
         <Button 
           variant="ghost" 
           size="icon" 
-          className="sm:hidden block" 
-          style={{ zIndex: 50 }} 
+          className="fixed top-4 left-4 block md:hidden" 
         >
           <Menu className="h-5 w-5" />
           <span className="sr-only">Toggle menu</span>
