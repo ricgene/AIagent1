@@ -140,7 +140,7 @@ export default function Home() {
     <div className="container max-w-lg mx-auto px-4 pt-8">
       <Card className="mt-8 bg-white/90">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl md:text-3xl">AIConnect</CardTitle>
+          <CardTitle className="text-2xl md:text-3xl text-primary">PRIZM Agent</CardTitle>
           <CardDescription>
             Connect with businesses using AI-powered matching
           </CardDescription>
@@ -148,8 +148,8 @@ export default function Home() {
         <CardContent>
           <Tabs defaultValue="login" className="text-foreground">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">Login</TabsTrigger>
-              <TabsTrigger value="register">Register</TabsTrigger>
+              <TabsTrigger value="login" className="text-primary">Login</TabsTrigger>
+              <TabsTrigger value="register" className="text-primary">Register</TabsTrigger>
             </TabsList>
 
             <TabsContent value="login">
@@ -163,7 +163,7 @@ export default function Home() {
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-primary-foreground">Email</FormLabel>
+                        <FormLabel>Email</FormLabel>
                         <FormControl>
                           <Input
                             type="email"
@@ -180,7 +180,7 @@ export default function Home() {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-primary-foreground">Password</FormLabel>
+                        <FormLabel>Password</FormLabel>
                         <FormControl>
                           <Input
                             type="password"
@@ -192,7 +192,7 @@ export default function Home() {
                       </FormItem>
                     )}
                   />
-                  <Button type="submit" className="w-full">
+                  <Button type="submit" variant="default" className="w-full bg-primary hover:bg-primary/90">
                     Login
                   </Button>
                 </form>
@@ -210,7 +210,7 @@ export default function Home() {
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-primary-foreground">Email</FormLabel>
+                        <FormLabel>Email</FormLabel>
                         <FormControl>
                           <Input
                             type="email"
@@ -227,7 +227,7 @@ export default function Home() {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-primary-foreground">Password</FormLabel>
+                        <FormLabel>Password</FormLabel>
                         <FormControl>
                           <Input
                             type="password"
@@ -239,7 +239,7 @@ export default function Home() {
                       </FormItem>
                     )}
                   />
-                  <Button type="submit" className="w-full">
+                  <Button type="submit" variant="default" className="w-full bg-primary hover:bg-primary/90">
                     Create Account
                   </Button>
                 </form>
