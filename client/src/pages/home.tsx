@@ -24,6 +24,7 @@ import { loginUser, registerUser, resetPassword } from "@/lib/auth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState, useEffect } from 'react';
 import { isFirebaseInitialized } from "@/lib/firebase";
+import { Loader2 } from "lucide-react";
 
 const authSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -36,7 +37,6 @@ export default function Home() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [isInitializing, setIsInitializing] = useState(true);
-  const [isResettingPassword, setIsResettingPassword] = useState(false);
 
   useEffect(() => {
     const checkInitialization = () => {
@@ -140,21 +140,17 @@ export default function Home() {
 
   const handleResetPassword = async (email: string) => {
     try {
-      console.log("Starting password reset process for email:", email);
-      console.log("Current URL origin:", window.location.origin);
       await resetPassword(email);
-      console.log("Password reset initiated successfully");
       toast({
         title: "Success",
         description: "Password reset email sent. Please check your inbox.",
       });
-      setIsResettingPassword(false);
     } catch (error: any) {
       console.error("Reset password error:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: `Reset failed: ${error.message}. Error code: ${error.code || 'unknown'}`,
+        description: error.message || "Failed to send reset email.",
       });
     }
   };
@@ -162,8 +158,9 @@ export default function Home() {
   if (isInitializing) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-primary">
-        <div className="text-white">
-          Initializing authentication...
+        <div className="text-center text-primary-foreground">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <div>Initializing authentication...</div>
         </div>
       </div>
     );
