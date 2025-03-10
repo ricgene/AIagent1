@@ -157,8 +157,8 @@ export default function Home() {
 
   if (isInitializing) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-primary">
-        <div className="text-center text-primary-foreground">
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
           <div>Initializing authentication...</div>
         </div>
@@ -168,7 +168,7 @@ export default function Home() {
 
   return (
     <div className="container max-w-lg mx-auto px-4 pt-8">
-      <Card className="mt-8 bg-white/90">
+      <Card className="mt-8">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl md:text-3xl text-primary">PRIZM Agent</CardTitle>
           <CardDescription>
@@ -176,10 +176,10 @@ export default function Home() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="login" className="text-foreground">
-            <TabsList className="grid w-full grid-cols-2 bg-primary/10">
-              <TabsTrigger value="login" className="data-[state=active]:bg-primary data-[state=active]:text-white">Login</TabsTrigger>
-              <TabsTrigger value="register" className="data-[state=active]:bg-primary data-[state=active]:text-white">Register</TabsTrigger>
+          <Tabs defaultValue="login">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="login">Login</TabsTrigger>
+              <TabsTrigger value="register">Register</TabsTrigger>
             </TabsList>
 
             <TabsContent value="login">
