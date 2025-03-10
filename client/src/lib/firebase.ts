@@ -3,16 +3,16 @@ import { getAuth, setPersistence, browserLocalPersistence } from "firebase/auth"
 import { getAnalytics } from "firebase/analytics";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCyO4TZBIILJeJcVXBaB1rEWPWBbhb2WA8",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: "prizmpoc.firebaseapp.com",
   projectId: "prizmpoc",
   storageBucket: "prizmpoc.appspot.com",
   messagingSenderId: "324482404818",
-  appId: "1:324482404818:web:94291fc32b16cca382b80b",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
   measurementId: "G-QGEQ4MTXR7"
 };
 
-console.log('Initializing Firebase with project:', firebaseConfig.projectId);
+console.log('Starting Firebase initialization with project:', firebaseConfig.projectId);
 
 let app: any;
 let auth: any;
@@ -41,16 +41,18 @@ try {
     })
     .catch((error) => {
       console.error('Error setting auth persistence:', error);
-      throw error;
+      // Don't throw the error, just log it
+      console.error('Firebase initialization failed but continuing');
+      initialized = false;
     });
 } catch (error) {
-  console.error('Error during Firebase initialization:', error);
-  throw error;
+  console.error('Critical error during Firebase initialization:', error);
+  initialized = false;
 }
 
 // Export a function to check if Firebase is initialized
 export function isFirebaseInitialized() {
-  return initialized;
+  return initialized && !!auth;
 }
 
 // Export the Firebase instances

@@ -39,15 +39,34 @@ export default function Home() {
   const [isInitializing, setIsInitializing] = useState(true);
 
   useEffect(() => {
+    let attempts = 0;
+    const maxAttempts = 50; // 5 seconds total waiting time
+
     const checkInitialization = () => {
+      console.log("Checking Firebase initialization status...");
       if (isFirebaseInitialized()) {
+        console.log("Firebase initialized successfully");
         setIsInitializing(false);
         return;
       }
+
+      attempts++;
+      if (attempts >= maxAttempts) {
+        console.error("Firebase initialization timed out");
+        setIsInitializing(false);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to initialize authentication. Please refresh the page.",
+        });
+        return;
+      }
+
       setTimeout(checkInitialization, 100);
     };
+
     checkInitialization();
-  }, []);
+  }, [toast]);
 
   const loginForm = useForm<AuthForm>({
     resolver: zodResolver(authSchema),
@@ -157,7 +176,7 @@ export default function Home() {
 
   if (isInitializing) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
           <div>Initializing authentication...</div>
@@ -193,16 +212,15 @@ export default function Home() {
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-primary">Email</FormLabel>
+                        <FormLabel>Email</FormLabel>
                         <FormControl>
                           <Input
                             type="email"
                             placeholder="Enter your email"
-                            className="bg-primary/5 border-primary/20 focus:border-primary focus:bg-primary/10 text-primary focus:ring-primary/20"
                             {...field}
                           />
                         </FormControl>
-                        <FormMessage className="text-primary" />
+                        <FormMessage />
                       </FormItem>
                     )}
                   />
@@ -211,26 +229,25 @@ export default function Home() {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-primary">Password</FormLabel>
+                        <FormLabel>Password</FormLabel>
                         <FormControl>
                           <Input
                             type="password"
                             placeholder="Enter your password"
-                            className="bg-primary/5 border-primary/20 focus:border-primary focus:bg-primary/10 text-primary focus:ring-primary/20"
                             {...field}
                           />
                         </FormControl>
-                        <FormMessage className="text-primary" />
+                        <FormMessage />
                       </FormItem>
                     )}
                   />
-                  <Button type="submit" variant="default" className="w-full bg-primary hover:bg-primary/90 text-white">
+                  <Button type="submit" className="w-full">
                     Login
                   </Button>
                   <Button
                     type="button"
                     variant="ghost"
-                    className="w-full text-primary hover:text-primary/90"
+                    className="w-full"
                     onClick={() => {
                       const email = loginForm.getValues("email");
                       if (email) {
@@ -261,16 +278,15 @@ export default function Home() {
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-primary">Email</FormLabel>
+                        <FormLabel>Email</FormLabel>
                         <FormControl>
                           <Input
                             type="email"
                             placeholder="Enter your email"
-                            className="bg-primary/5 border-primary/20 focus:border-primary focus:bg-primary/10 text-primary focus:ring-primary/20"
                             {...field}
                           />
                         </FormControl>
-                        <FormMessage className="text-primary" />
+                        <FormMessage />
                       </FormItem>
                     )}
                   />
@@ -279,20 +295,19 @@ export default function Home() {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-primary">Password</FormLabel>
+                        <FormLabel>Password</FormLabel>
                         <FormControl>
                           <Input
                             type="password"
                             placeholder="Choose a password"
-                            className="bg-primary/5 border-primary/20 focus:border-primary focus:bg-primary/10 text-primary focus:ring-primary/20"
                             {...field}
                           />
                         </FormControl>
-                        <FormMessage className="text-primary" />
+                        <FormMessage />
                       </FormItem>
                     )}
                   />
-                  <Button type="submit" variant="default" className="w-full bg-primary hover:bg-primary/90 text-white">
+                  <Button type="submit" className="w-full">
                     Create Account
                   </Button>
                 </form>
