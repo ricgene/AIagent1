@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Send, Mic, MicOff, VolumeX, Volume2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { apiRequest } from "@/lib/queryClient";
+import { synthesizeSpeech } from "@/lib/text-to-speech";
 import type { Message } from "@shared/schema";
 
 interface AIChatThreadProps {
@@ -15,6 +16,7 @@ interface AIChatThreadProps {
 export function AIChatThread({ userId }: AIChatThreadProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
   const [transcriptText, setTranscriptText] = useState('');
   const { register, handleSubmit, reset, setValue, watch } = useForm<{ content: string }>();
   const queryClient = useQueryClient();
@@ -26,101 +28,31 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
   const queryKey = [`/api/messages/ai/${userId}`];
   const [isMobile] = useState(window.navigator.userAgent.match(/Mobile|Android|iOS|iPhone|iPad|iPod/i));
 
-  // Initialize speech synthesis
-  useEffect(() => {
-    const initVoices = async () => {
-      try {
-        // Some mobile browsers need a user interaction to initialize speech
-        if (isMobile) {
-          await window.speechSynthesis.speak(new SpeechSynthesisUtterance(''));
-        }
-
-        // Set up voice
-        const loadVoices = () => {
-          const availableVoices = window.speechSynthesis.getVoices();
-          if (availableVoices.length === 0) {
-            console.warn("No voices available for speech synthesis");
-          }
-        };
-
-        // Initial load
-        loadVoices();
-
-        // Setup voice changed listener
-        if ('onvoiceschanged' in window.speechSynthesis) {
-          window.speechSynthesis.onvoiceschanged = loadVoices;
-        }
-
-        return () => {
-          if ('onvoiceschanged' in window.speechSynthesis) {
-            window.speechSynthesis.onvoiceschanged = null;
-          }
-        };
-      } catch (error) {
-        console.error("Error initializing speech synthesis:", error);
-      }
-    };
-
-    initVoices();
-  }, [isMobile]);
-
-  // Improved speech synthesis function
+  // Speak response using Google Cloud TTS
   const speakResponse = async (text: string) => {
     if (isMuted) return;
 
     try {
-      if (!window.speechSynthesis) {
-        console.error("Speech synthesis not supported");
-        return;
-      }
-
       console.log("Attempting to speak:", text);
+      setIsSpeaking(true);
 
-      // Cancel any ongoing speech
-      window.speechSynthesis.cancel();
+      const audioData = await synthesizeSpeech(text);
+      const blob = new Blob([audioData], { type: 'audio/mp3' });
+      const url = URL.createObjectURL(blob);
 
-      const utterance = new SpeechSynthesisUtterance(text);
-
-      // Configure utterance
-      const voices = window.speechSynthesis.getVoices();
-      const voice = voices.find(v => v.lang.startsWith('en'));
-      if (voice) {
-        utterance.voice = voice;
-        utterance.volume = 1.0;     // Full volume for mobile
-        utterance.rate = 1.0;       // Normal speed
-        utterance.pitch = 1.0;      // Normal pitch
-        utterance.lang = voice.lang; // Use voice's language
-      } else {
-        console.warn("No English voice found, using default");
+      if (audioRef.current) {
+        audioRef.current.src = url;
+        audioRef.current.onended = () => {
+          setIsSpeaking(false);
+          URL.revokeObjectURL(url);
+        };
+        audioRef.current.onerror = (event) => {
+          console.error("Audio playback error:", event);
+          setIsSpeaking(false);
+          URL.revokeObjectURL(url);
+        };
+        await audioRef.current.play();
       }
-
-      // Add detailed event handlers
-      utterance.onstart = () => {
-        console.log("Speech started");
-        setIsSpeaking(true);
-      };
-      utterance.onend = () => {
-        console.log("Speech ended");
-        setIsSpeaking(false);
-      };
-      utterance.onerror = (event) => {
-        console.error("Speech error:", event);
-        setIsSpeaking(false);
-      };
-
-      // For mobile browsers, try to unlock audio context
-      if (isMobile) {
-        try {
-          const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-          const audioContext = new AudioContext();
-          await audioContext.resume();
-        } catch (error) {
-          console.warn("Could not initialize AudioContext:", error);
-        }
-      }
-
-      // Start speaking
-      window.speechSynthesis.speak(utterance);
     } catch (error) {
       console.error("Speech synthesis error:", error);
       setIsSpeaking(false);
@@ -235,6 +167,7 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
 
   return (
     <div className="flex flex-col h-[600px]">
+      <audio ref={audioRef} className="hidden" /> {/* Added audio element */}
       <div className="border-b p-4">
         <div className="flex items-center gap-2 justify-end">
           <Button

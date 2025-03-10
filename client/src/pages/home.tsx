@@ -24,7 +24,6 @@ import { loginUser, registerUser, resetPassword } from "@/lib/auth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState, useEffect } from 'react';
 import { isFirebaseInitialized } from "@/lib/firebase";
-import { Loader2 } from "lucide-react";
 
 const authSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -37,36 +36,18 @@ export default function Home() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [isInitializing, setIsInitializing] = useState(true);
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
 
   useEffect(() => {
-    let attempts = 0;
-    const maxAttempts = 50; // 5 seconds total waiting time
-
     const checkInitialization = () => {
-      console.log("Checking Firebase initialization status...");
       if (isFirebaseInitialized()) {
-        console.log("Firebase initialized successfully");
         setIsInitializing(false);
         return;
       }
-
-      attempts++;
-      if (attempts >= maxAttempts) {
-        console.error("Firebase initialization timed out");
-        setIsInitializing(false);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to initialize authentication. Please refresh the page.",
-        });
-        return;
-      }
-
       setTimeout(checkInitialization, 100);
     };
-
     checkInitialization();
-  }, [toast]);
+  }, []);
 
   const loginForm = useForm<AuthForm>({
     resolver: zodResolver(authSchema),
@@ -159,27 +140,30 @@ export default function Home() {
 
   const handleResetPassword = async (email: string) => {
     try {
+      console.log("Starting password reset process for email:", email);
+      console.log("Current URL origin:", window.location.origin);
       await resetPassword(email);
+      console.log("Password reset initiated successfully");
       toast({
         title: "Success",
         description: "Password reset email sent. Please check your inbox.",
       });
+      setIsResettingPassword(false);
     } catch (error: any) {
       console.error("Reset password error:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message || "Failed to send reset email.",
+        description: `Reset failed: ${error.message}. Error code: ${error.code || 'unknown'}`,
       });
     }
   };
 
   if (isInitializing) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <div>Initializing authentication...</div>
+      <div className="min-h-screen flex items-center justify-center bg-primary">
+        <div className="text-white">
+          Initializing authentication...
         </div>
       </div>
     );
@@ -187,7 +171,7 @@ export default function Home() {
 
   return (
     <div className="container max-w-lg mx-auto px-4 pt-8">
-      <Card className="mt-8">
+      <Card className="mt-8 bg-white/90">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl md:text-3xl text-primary">PRIZM Agent</CardTitle>
           <CardDescription>
@@ -195,10 +179,10 @@ export default function Home() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="login">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">Login</TabsTrigger>
-              <TabsTrigger value="register">Register</TabsTrigger>
+          <Tabs defaultValue="login" className="text-foreground">
+            <TabsList className="grid w-full grid-cols-2 bg-primary/10">
+              <TabsTrigger value="login" className="data-[state=active]:bg-primary data-[state=active]:text-white">Login</TabsTrigger>
+              <TabsTrigger value="register" className="data-[state=active]:bg-primary data-[state=active]:text-white">Register</TabsTrigger>
             </TabsList>
 
             <TabsContent value="login">
@@ -212,15 +196,16 @@ export default function Home() {
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Email</FormLabel>
+                        <FormLabel className="text-primary">Email</FormLabel>
                         <FormControl>
                           <Input
                             type="email"
                             placeholder="Enter your email"
+                            className="bg-primary/5 border-primary/20 focus:border-primary focus:bg-primary/10 text-primary focus:ring-primary/20"
                             {...field}
                           />
                         </FormControl>
-                        <FormMessage />
+                        <FormMessage className="text-primary" />
                       </FormItem>
                     )}
                   />
@@ -229,25 +214,26 @@ export default function Home() {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Password</FormLabel>
+                        <FormLabel className="text-primary">Password</FormLabel>
                         <FormControl>
                           <Input
                             type="password"
                             placeholder="Enter your password"
+                            className="bg-primary/5 border-primary/20 focus:border-primary focus:bg-primary/10 text-primary focus:ring-primary/20"
                             {...field}
                           />
                         </FormControl>
-                        <FormMessage />
+                        <FormMessage className="text-primary" />
                       </FormItem>
                     )}
                   />
-                  <Button type="submit" className="w-full">
+                  <Button type="submit" variant="default" className="w-full bg-primary hover:bg-primary/90 text-white">
                     Login
                   </Button>
                   <Button
                     type="button"
                     variant="ghost"
-                    className="w-full"
+                    className="w-full text-primary hover:text-primary/90"
                     onClick={() => {
                       const email = loginForm.getValues("email");
                       if (email) {
@@ -278,15 +264,16 @@ export default function Home() {
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Email</FormLabel>
+                        <FormLabel className="text-primary">Email</FormLabel>
                         <FormControl>
                           <Input
                             type="email"
                             placeholder="Enter your email"
+                            className="bg-primary/5 border-primary/20 focus:border-primary focus:bg-primary/10 text-primary focus:ring-primary/20"
                             {...field}
                           />
                         </FormControl>
-                        <FormMessage />
+                        <FormMessage className="text-primary" />
                       </FormItem>
                     )}
                   />
@@ -295,19 +282,20 @@ export default function Home() {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Password</FormLabel>
+                        <FormLabel className="text-primary">Password</FormLabel>
                         <FormControl>
                           <Input
                             type="password"
                             placeholder="Choose a password"
+                            className="bg-primary/5 border-primary/20 focus:border-primary focus:bg-primary/10 text-primary focus:ring-primary/20"
                             {...field}
                           />
                         </FormControl>
-                        <FormMessage />
+                        <FormMessage className="text-primary" />
                       </FormItem>
                     )}
                   />
-                  <Button type="submit" className="w-full">
+                  <Button type="submit" variant="default" className="w-full bg-primary hover:bg-primary/90 text-white">
                     Create Account
                   </Button>
                 </form>
