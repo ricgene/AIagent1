@@ -85,11 +85,27 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
 
       // Configure utterance with fixed voice
       const voices = window.speechSynthesis.getVoices();
-      const desiredVoice = voices.find(v => v.name === "en-US-Chirp-HD-F");
-      utterance.voice = desiredVoice || voices.find(v => v.lang.startsWith('en')) || null;
+      console.log("Available voices:", voices.map(v => v.name));
+
+      // Try to find Google US English Female voice first
+      const desiredVoice = voices.find(v => 
+        v.name.includes("Google") && 
+        v.name.includes("US English") && 
+        v.name.includes("Female")
+      ) || // Or find any English female voice
+      voices.find(v => 
+        v.lang.startsWith('en') && 
+        (v.name.toLowerCase().includes("female") || 
+         v.name.includes("Samantha"))
+      ) || // Or just any English voice
+      voices.find(v => v.lang.startsWith('en'));
+
+      utterance.voice = desiredVoice || null;
 
       if (!utterance.voice) {
-        console.warn("Could not find desired voice. Using default voice if available.");
+        console.warn("Could not find desired voice. Using default voice.");
+      } else {
+        console.log("Selected voice:", utterance.voice.name);
       }
 
       utterance.volume = 1.0;     // Full volume for mobile
