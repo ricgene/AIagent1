@@ -7,6 +7,7 @@ import { Send } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { apiRequest } from "@/lib/queryClient";
 import type { Message } from "@shared/schema";
+import { createWebSocketConnection } from "@/lib/network";
 
 interface ChatThreadProps {
   userId1: number;
@@ -37,19 +38,35 @@ export function ChatThread({ userId1, userId2, currentUserId }: ChatThreadProps)
   });
 
   useEffect(() => {
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
+    const ws = createWebSocketConnection();
+    
+    if (ws) {
+      ws.onopen = () => {
+        console.log("WebSocket connected, authenticating user", currentUserId);
+        ws.send(JSON.stringify({ type: "auth", userId: currentUserId }));
+      };
 
-    ws.onopen = () => {
-      ws.send(JSON.stringify({ type: "auth", userId: currentUserId }));
+      ws.onmessage = (event) => {
+        console.log("WebSocket message received:", event.data);
+        try {
+          // Parse the message data and refetch messages if needed
+          const data = JSON.parse(event.data);
+          if (data.fromId === (currentUserId === userId1 ? userId2 : userId1)) {
+            refetch();
+          }
+        } catch (err) {
+          console.error("Error parsing WebSocket message:", err);
+        }
+      };
+    }
+
+    return () => {
+      if (ws && ws.readyState < 2) { // 0 = CONNECTING, 1 = OPEN
+        console.log("Closing WebSocket connection");
+        ws.close();
+      }
     };
-
-    ws.onmessage = () => {
-      refetch();
-    };
-
-    return () => ws.close();
-  }, [currentUserId, refetch]);
+  }, [currentUserId, userId1, userId2, refetch]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
