@@ -14,10 +14,16 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
+
 // Get the base API URL
 const getApiBaseUrl = () => {
-  // In development (like Replit preview), use the same origin
-  // In production, you might want to use a specific API URL
+  // Check if we're in development mode
+  if (process.env.NODE_ENV !== 'production') {
+    // Use the deployed server URL
+    return "https://us-central1-prizmpoc.cloudfunctions.net/hello-world";
+  }
+  
+  // In production, use the same origin or a specific API URL
   return "";
 };
 

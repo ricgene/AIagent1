@@ -1,13 +1,19 @@
 // network.ts - Converted from JavaScript to TypeScript
 
-// Properly construct WebSocket URL with the correct host and port
+// Properly construct WebSocket URL for the correct environment
 const getWsUrl = (): string => {
-  // Get the protocol, hostname, and port
+  // Check if we're in development mode
+  if (process.env.NODE_ENV !== 'production') {
+    // Use the deployed server WebSocket URL
+    // Note: You might need to adjust this URL based on your actual WebSocket endpoint
+    return 'wss://us-central1-prizmpoc.cloudfunctions.net/hello-world';
+  }
+  
+  // In production, derive from the current location
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
   const hostname = window.location.hostname;
   
   // For standard ports (80/443), browsers often omit the port
-  // So we need to determine if we should add it explicitly
   const port = window.location.port || 
                (window.location.protocol === 'https:' ? '443' : '80');
   
@@ -21,6 +27,7 @@ const getWsUrl = (): string => {
   // Create WebSocket URL
   return `${protocol}//${hostname}${portSuffix}`;
 };
+
 
 // Safely construct WebSocket connection
 function createWebSocketConnection(): WebSocket | null {
