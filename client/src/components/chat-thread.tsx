@@ -11,7 +11,7 @@ import { createWebSocketConnection } from "@/lib/network";
 
 interface ChatThreadProps {
   userId1: number;
-  userId2: number;
+  userId2: number | null;
   currentUserId: number;
 }
 
@@ -19,15 +19,24 @@ export function ChatThread({ userId1, userId2, currentUserId }: ChatThreadProps)
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { register, handleSubmit, reset } = useForm<{ content: string }>();
 
+  // If userId2 is null, we won't fetch messages
+  const enabled = userId2 !== null;
+
   const { data: messages = [], refetch } = useQuery<Message[]>({
     queryKey: ["/api/messages", userId1, userId2],
+    enabled: enabled, // Only run the query if userId2 is not null
   });
 
   const sendMessage = useMutation({
     mutationFn: async (content: string) => {
+      // Ensure userId2 is not null before sending message
+      if (userId2 === null) {
+        throw new Error("Cannot send message: No recipient selected");
+      }
+      
       return apiRequest("POST", "/api/messages", {
         fromId: currentUserId,
-        toId: currentUserId === userId1 ? userId2 : userId1,
+        toId: userId2, // Safe to use here now that we've checked
         content,
       });
     },
@@ -38,6 +47,9 @@ export function ChatThread({ userId1, userId2, currentUserId }: ChatThreadProps)
   });
 
   useEffect(() => {
+    // Don't set up WebSocket if userId2 is null
+    if (userId2 === null) return;
+    
     const ws = createWebSocketConnection();
     
     if (ws) {
@@ -51,7 +63,7 @@ export function ChatThread({ userId1, userId2, currentUserId }: ChatThreadProps)
         try {
           // Parse the message data and refetch messages if needed
           const data = JSON.parse(event.data);
-          if (data.fromId === (currentUserId === userId1 ? userId2 : userId1)) {
+          if (data.fromId === userId2) {
             refetch();
           }
         } catch (err) {
@@ -71,6 +83,17 @@ export function ChatThread({ userId1, userId2, currentUserId }: ChatThreadProps)
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Show placeholder if no recipient is selected
+  if (userId2 === null) {
+    return (
+      <div className="flex flex-col h-[600px] items-center justify-center">
+        <div className="text-muted-foreground">
+          Please select a conversation to start messaging
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-[600px]">

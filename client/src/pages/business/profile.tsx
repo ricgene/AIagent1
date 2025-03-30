@@ -40,7 +40,7 @@ export default function BusinessProfile() {
       description: "",
       category: "",
       location: "",
-      services: "",
+      services: [],
     },
   });
 

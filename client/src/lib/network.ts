@@ -1,5 +1,7 @@
+// network.ts - Converted from JavaScript to TypeScript
+
 // Properly construct WebSocket URL with the correct host and port
-const getWsUrl = () => {
+const getWsUrl = (): string => {
   // Get the protocol, hostname, and port
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
   const hostname = window.location.hostname;
@@ -21,7 +23,7 @@ const getWsUrl = () => {
 };
 
 // Safely construct WebSocket connection
-function createWebSocketConnection() {
+function createWebSocketConnection(): WebSocket | null {
   try {
     const url = getWsUrl();
     console.log("Connecting to WebSocket at:", url);
@@ -30,7 +32,7 @@ function createWebSocketConnection() {
     const ws = new WebSocket(`${url}/ws`);
     
     // Add error handlers
-    ws.addEventListener('error', (error) => {
+    ws.addEventListener('error', (error: Event) => {
       console.error("WebSocket connection error:", error);
     });
     
@@ -38,7 +40,7 @@ function createWebSocketConnection() {
       console.log("WebSocket connection established successfully");
     });
     
-    ws.addEventListener('close', (event) => {
+    ws.addEventListener('close', (event: CloseEvent) => {
       console.log(`WebSocket connection closed. Code: ${event.code}, Reason: ${event.reason}`);
     });
     
