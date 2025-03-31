@@ -35,9 +35,11 @@ export default defineConfig({
     })
   ],
   resolve: {
+    extensions: ['.web.tsx', '.web.jsx', '.web.js', '.tsx', '.ts', '.js'],
     alias: {
       "@": path.resolve(__dirname, "client", "src"),
       "@shared": path.resolve(__dirname, "shared"),
+      'react-native': 'react-native-web',
     },
   },
   root: path.resolve(__dirname, "client"),
