@@ -4,6 +4,7 @@ import themePlugin from "@replit/vite-plugin-shadcn-theme-json";
 import path, { dirname } from "path";
 import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 import { fileURLToPath } from "url";
+import { viteStaticCopy } from 'vite-plugin-static-copy';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -20,6 +21,18 @@ export default defineConfig({
           ),
         ]
       : []),
+    viteStaticCopy({
+      targets: [
+        {
+          src: 'service-worker.ts',
+          dest: '.',
+          transform: (contents) => {
+            // Convert TypeScript to JavaScript
+            return contents.replace(/\.ts/g, '.js');
+          }
+        }
+      ]
+    })
   ],
   resolve: {
     alias: {
@@ -32,4 +45,7 @@ export default defineConfig({
     outDir: path.resolve(__dirname, "dist/public"),
     emptyOutDir: true,
   },
+  server: {
+    port: 5173
+  }
 });

@@ -17,17 +17,12 @@ async function throwIfResNotOk(res: Response) {
 
 // Get the base API URL
 const getApiBaseUrl = () => {
-  // Check if we're in development mode
-  if (process.env.NODE_ENV !== 'production') {
-    // Use the deployed server URL
-    return "https://us-central1-prizmpoc.cloudfunctions.net/hello-world";
-  }
-  
-  // In production, use the same origin or a specific API URL
-  return "";
+  // Always use the cloud server URL
+  return "https://ai-api-service-324482404818.us-central1.run.app";
 };
 
 // Function to handle API requests
+// In client/src/lib/queryClient.ts
 export async function apiRequest(
   method: string,
   url: string,
@@ -41,7 +36,7 @@ export async function apiRequest(
     method,
     headers: data ? { "Content-Type": "application/json" } : {},
     body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
+    credentials: 'omit',
   });
 
   await throwIfResNotOk(res);
@@ -62,7 +57,7 @@ export const getQueryFn: <T>(options: {
       console.log(`Making query to ${apiUrl}`);
       
       const res = await fetch(apiUrl, {
-        credentials: "include",
+        credentials: 'omit',
       });
 
       if (unauthorizedBehavior === "returnNull" && res.status === 401) {

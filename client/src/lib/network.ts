@@ -1,19 +1,30 @@
 // network.ts - Converted from JavaScript to TypeScript
 
+// Configuration for WebSocket endpoints
+const WS_CONFIG = {
+  development: {
+    url: import.meta.env.VITE_WS_URL || 'ws://localhost:3000'
+  },
+  production: {
+    url: import.meta.env.VITE_WS_URL || ''
+  }
+};
+
 // Properly construct WebSocket URL for the correct environment
 const getWsUrl = (): string => {
   // Check if we're in development mode
-  if (process.env.NODE_ENV !== 'production') {
-    // Use the deployed server WebSocket URL
-    // Note: You might need to adjust this URL based on your actual WebSocket endpoint
-    return 'wss://us-central1-prizmpoc.cloudfunctions.net/hello-world';
+  if (import.meta.env.DEV) {
+    return WS_CONFIG.development.url;
   }
   
-  // In production, derive from the current location
+  // In production, use configured URL or derive from current location
+  if (WS_CONFIG.production.url) {
+    return WS_CONFIG.production.url;
+  }
+  
+  // Fallback to deriving from current location
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
   const hostname = window.location.hostname;
-  
-  // For standard ports (80/443), browsers often omit the port
   const port = window.location.port || 
                (window.location.protocol === 'https:' ? '443' : '80');
   
@@ -24,19 +35,21 @@ const getWsUrl = (): string => {
       ? `:${port}` 
       : '';
   
-  // Create WebSocket URL
   return `${protocol}//${hostname}${portSuffix}`;
 };
-
 
 // Safely construct WebSocket connection
 function createWebSocketConnection(): WebSocket | null {
   try {
     const url = getWsUrl();
-    console.log("Connecting to WebSocket at:", url);
+    console.log("Attempting to connect to WebSocket at:", url);
+    
+    if (!url) {
+      throw new Error("WebSocket URL is not configured");
+    }
     
     // Create the WebSocket with proper error handling
-    const ws = new WebSocket(`${url}/ws`);
+    const ws = new WebSocket(url);
     
     // Add error handlers
     ws.addEventListener('error', (error: Event) => {

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -17,14 +17,30 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [transcriptText, setTranscriptText] = useState('');
   const { register, handleSubmit, reset, setValue, watch } = useForm<{ content: string }>();
-  const queryClient = useQueryClient();
   const [isListening, setIsListening] = useState(false);
   const [speechSupported] = useState('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
   const recognitionRef = useRef<any>(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
-  const queryKey = [`/api/messages/ai/${userId}`];
+  const [hasSentFirstMessage, setHasSentFirstMessage] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([]);
+
   const [isMobile] = useState(window.navigator.userAgent.match(/Mobile|Android|iOS|iPhone|iPad|iPod/i));
+
+  // Initialize with greeting message
+  useEffect(() => {
+    const greetingMessage: Message = {
+      id: Date.now(),
+      fromId: 0,
+      toId: userId,
+      content: "I'm your AI assistant. How can I help you today?",
+      timestamp: new Date(),
+      isAiAssistant: true
+    };
+    
+    setMessages([greetingMessage]);
+    speakResponse(greetingMessage.content);
+  }, []);
 
   // Initialize speech synthesis
   useEffect(() => {
@@ -146,25 +162,25 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
     }
   };
 
+  // Update the sendMessage mutation to not send greeting
   const sendMessage = useMutation({
     mutationFn: async (content: string) => {
       console.log("Sending message:", content);
-      const response = await apiRequest("POST", "/api/messages/ai", {
-        fromId: userId,
-        content,
+      const response = await apiRequest("POST", "/api/chat", {
+        userId: userId,
+        message: content
       });
-      const newMessages: Message[] = await response.json();
-      console.log("Received new messages:", newMessages);
-      return newMessages;
+      const result = await response.json();
+      console.log("Received response:", result);
+      return [result.userMessage, result.assistantMessage];
     },
     onSuccess: (newMessages) => {
       console.log("Mutation succeeded, updating messages:", newMessages);
-      queryClient.setQueryData(queryKey, (old: Message[] = []) => {
-        console.log("Old messages:", old);
-        const updatedMessages = [...old, ...newMessages];
+      setMessages(prev => {
+        const updatedMessages = [...prev, ...newMessages];
         console.log("Updated messages:", updatedMessages);
         // Speak the AI's response
-        const aiResponse = newMessages.find(m => m.isAiAssistant);
+        const aiResponse = newMessages.find((m: Message) => m.isAiAssistant);
         if (aiResponse) {
           console.log('Found AI response to speak:', aiResponse.content);
           speakResponse(aiResponse.content);
@@ -174,11 +190,6 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
       reset();
       setTranscriptText('');
     },
-  });
-
-  // Query for messages
-  const { data: messages = [] } = useQuery<Message[]>({
-    queryKey,
   });
 
   // Initialize speech recognition
@@ -252,24 +263,9 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Then update the rendering code to safely handle non-array data
   return (
     <div className="flex flex-col h-[600px]">
-      <div className="border-b p-4">
-        <div className="flex items-center gap-2 justify-end">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setIsMuted(!isMuted)}
-            className="ml-2"
-          >
-            {isMuted ? (
-              <VolumeX className="h-4 w-4" />
-            ) : (
-              <Volume2 className="h-4 w-4" />
-            )}
-          </Button>
-        </div>
-      </div>
       <div className="flex-1 overflow-y-auto p-4 flex flex-col-reverse">
         <div className="space-y-4">
           {messages.length === 0 ? (
@@ -278,7 +274,7 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
                 How can I help with your home improvement needs today?
               </Card>
             </div>
-          ) : (
+          ) : Array.isArray(messages) ? (
             messages.map((message) => (
               <div
                 key={message.id}
@@ -297,6 +293,12 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
                 </Card>
               </div>
             ))
+          ) : (
+            <div className="flex justify-start">
+              <Card className="max-w-[80%] p-3 bg-muted">
+                Error loading messages. Please try again.
+              </Card>
+            </div>
           )}
           <div ref={messagesEndRef} />
         </div>
@@ -329,6 +331,19 @@ export function AIChatThread({ userId }: AIChatThreadProps) {
             )}
           </Button>
         )}
+        <Button
+          type="button"
+          size="icon"
+          variant="secondary"
+          onClick={() => setIsMuted(!isMuted)}
+          disabled={sendMessage.isPending}
+        >
+          {isMuted ? (
+            <VolumeX className="h-4 w-4" />
+          ) : (
+            <Volume2 className="h-4 w-4" />
+          )}
+        </Button>
         <Button
           type="submit"
           size="icon"
